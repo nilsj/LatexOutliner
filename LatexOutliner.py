@@ -23,10 +23,10 @@ class LatexOutlinerCommand(WindowCommand):
 
         # create the new view and move it to the leftmost group
         view = self.window.new_file()
-        view.set_scratch(True)
-        view.run_command("populate_outline_view")
-        view.set_read_only(True)
         self.window.set_view_index(view, 0, 0)
+        view.set_scratch(True)
+        view.set_name("Outline")
+        view.run_command("populate_outline_view")
 
 
 class PopulateOutlineViewCommand(TextCommand):
@@ -34,4 +34,9 @@ class PopulateOutlineViewCommand(TextCommand):
     Populates the outline view
     """
     def run(self, edit):
-        self.view.insert(edit, 0, "Hallo")
+        self.view.set_read_only(False)
+
+        for i, text in enumerate("Hallo Du da ?".split()):
+            self.view.insert(edit, self.view.text_point(i, 0), text+"\n")
+
+        self.view.set_read_only(True)

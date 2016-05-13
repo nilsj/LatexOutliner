@@ -3,14 +3,15 @@
 Work in progress!
 
 [Scrivener][scr]-style latex editing for SublimeText.
+
 The technical realization is inspired by the [FileBrowser][fb] plugin.
 
 [scr]: https://www.literatureandlatte.com/scrivener.php
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- Create internal outline representation
-- Display outline
+- read/store internal outline representation to disk
+- generate outline.tex from outline
 - import outline from filesystem
 - export outline to filesystem
 

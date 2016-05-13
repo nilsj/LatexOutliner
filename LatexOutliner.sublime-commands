@@ -2,5 +2,9 @@
   {
     "caption": "LatexOutliner: Show outline on the left",
     "command": "latex_outliner"
+  },
+  {
+    "caption": "LatexOutliner: Set up project",
+    "command": "set_up_latex_outliner_project"
   }
 ]

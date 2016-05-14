@@ -6,12 +6,38 @@ from sublime_plugin import WindowCommand, TextCommand
 from os.path import join, dirname
 from shutil import copyfile
 from itertools import count
-
+from json import dump, load
 
 # todo: load outline from disk in plugin_loaded
 # todo: write outline to disk in plugin_unloaded
 # todo: make outline dict so it supports multiple projects
-outline = None
+_outline = {}
+
+
+def plugin_unloaded():
+    for project_path in _outline:
+        dump_outline(project_path)
+
+
+def get_outline(project_path):
+    global _outline
+    if project_path not in _outline:
+        _outline[project_path] = load_outline(project_path)
+    return _outline[project_path]
+
+
+OUTLINE_JSON = "outline.json"
+
+
+def dump_outline(project_path):
+    with open(join(project_path, OUTLINE_JSON), 'w', encoding='utf-8') as f:
+        dump(_outline[project_path].getJson(), f)
+
+
+def load_outline(project_path):
+    with open(join(project_path, OUTLINE_JSON), 'r', encoding='utf-8') as f:
+        outline = Heading.fromJson(load(f))
+    return outline
 
 
 class SetUpLatexOutlinerProjectCommand(WindowCommand):
@@ -48,6 +74,7 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         self.window.set_project_data(project_data)
 
         # copy the example main file "main.tex" and open it
+        # idea: use folders from settings
         project_root = dirname(self.window.project_file_name())
         LO_path = join(packages_path(), "LatexOutliner")
         orginal_main = join(LO_path, "main.tex")
@@ -59,7 +86,6 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         # idea: ask if an example outline should be created
 
         # note: wahrscheinlich muss die Struktur woanders gespeichert werden
-        global outline
         outline = Heading("outline")
         for i in range(3):
             section = Heading("Section "+str(i+1))
@@ -67,6 +93,7 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
             for j in range(4):
                 text = TextSnippet("Text Snippet "+str(j+1))
                 section.appendChild(text)
+        _outline[project_root] = outline
 
         return
 
@@ -105,7 +132,7 @@ class PopulateOutlineViewCommand(TextCommand):
 
         # todo: folding
         # walk outline and insert in view
-        self.showOutline(edit, outline)
+        self.showOutline(edit, get_outline(dirname(self.view.window().project_file_name())))
 
         self.view.set_read_only(True)
 
@@ -126,12 +153,48 @@ class Heading():
     def appendChild(self, child):
         self.children.append(child)
 
+    def getJson(self):
+        _json = {'class': 'Heading',
+                 'caption': self.caption,
+                 'children': []
+                 }
+        for child in self.children:
+            _json['children'].append(child.getJson())
+        return _json
+
+    @staticmethod
+    def fromJson(json):
+        heading = Heading(json['caption'])
+        for child in json['children']:
+            if child['class'] == 'Heading':
+                childClass = Heading
+            elif child['class'] == 'TextSnippet':
+                childClass = TextSnippet
+            else:
+                raise NameError("Unknown Class:", child['class'])
+            heading.appendChild(childClass.fromJson(child))
+        return heading
+
 
 class TextSnippet():
-    def __init__(self, caption):
+    def __init__(self, caption, path=None):
         self.caption = caption
-        # todo: create new file for snippet (?)
-        self.path = get_fresh_path()
+        if path:
+            self.path = path
+        else:
+            # todo: create new file for snippet (?)
+            self.path = caption + "_path"
+
+    def getJson(self):
+        return {'class': 'TextSnippet',
+                'caption': self.caption,
+                'path': self.path
+                }
+
+    @staticmethod
+    def fromJson(json):
+        text = TextSnippet(json['caption'], json['path'])
+        return text
 
 
 def get_fresh_path():

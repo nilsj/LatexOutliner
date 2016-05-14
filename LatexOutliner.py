@@ -175,6 +175,13 @@ class Heading():
         self.children.append(child)
         child.parent = self
 
+    def insertChildAt(self, item, position):
+        self.children.insert(position, item)
+        item.parent = self
+
+    def removeChild(self, item):
+        self.children.remove(item)
+
     def getJson(self):
         json = {'class': 'Heading',
                 'caption': self.caption,
@@ -278,3 +285,19 @@ class LatexOutlinerCollapseCommand(TextCommand):
                 # idea: just store linenumbers in the object
                 view.run_command("populate_outline_view", {'cursor': pos})
 
+
+class LatexOutlinerMoveUpCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        position = item.parent.children.index(item)
+        if position == 0:
+            return
+        else:
+            item.parent.removeChild(item)
+            item.parent.insertChildAt(item, position-1)
+            row, col = view.rowcol(view.sel()[0].a)
+            # todo: die position funktioniert noch nicht so, wie
+            # ich es erwarte
+            pos = row-1, col
+            view.run_command("populate_outline_view", {'cursor': pos})

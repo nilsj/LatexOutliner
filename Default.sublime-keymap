@@ -1,5 +1,12 @@
 [
   {
+      "keys": ["enter"],
+      "command": "latex_outliner_open_text_snippet",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
       "keys": ["right"],
       "command": "latex_outliner_expand",
       "context": [
@@ -14,8 +21,8 @@
       ]
   },
   {
-      "keys": ["enter"],
-      "command": "latex_outliner_open_text_snippet",
+      "keys": ["shift+up"],
+      "command": "latex_outliner_move_up",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]

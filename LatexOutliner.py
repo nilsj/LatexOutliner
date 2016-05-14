@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from sublime import message_dialog, packages_path
+from sublime import message_dialog, packages_path, Region
 from sublime_plugin import WindowCommand, TextCommand
 from os.path import join, dirname
 from shutil import copyfile
@@ -119,6 +119,8 @@ class LatexOutlinerCommand(WindowCommand):
         view = self.window.new_file()
         self.window.set_view_index(view, 0, 0)
         view.set_scratch(True)
+        view.set_syntax_file(
+            'Packages/LatexOutliner/LatexOutliner.hidden-tmLanguage')
         view.set_name("Outline")
         view.run_command("populate_outline_view")
 
@@ -127,16 +129,22 @@ class PopulateOutlineViewCommand(TextCommand):
     """
     Populates the outline view
     """
-    def run(self, edit):
-        self.view.set_read_only(False)
-
+    def run(self, edit, cursor=None):
+        view = self.view
+        view.set_read_only(False)
+        # clear view
+        view.erase(edit, Region(0, view.size()))
         # todo: folding
         # walk outline and insert in view
-        project_root = dirname(self.view.window().project_file_name())
+        project_root = dirname(view.window().project_file_name())
         global _index
-        _index[project_root] = self.showOutline(edit, get_outline(project_root))
-
-        self.view.set_read_only(True)
+        _index[project_root] = self.showOutline(edit,
+                                                get_outline(project_root))
+        if cursor:
+            view.show(cursor)
+            view.sel().clear()
+            view.sel().add(Region(cursor))
+        view.set_read_only(True)
 
     # idea: set caption of root element as view title
     def showOutline(self, edit, item, lineCount=count(), level=0, indent='  '):
@@ -214,3 +222,29 @@ def get_fresh_path():
     # todo: set new_path_directory
     new_files_directory = "new"
     yield join(new_files_directory, "textSnippet"+str(i))
+
+
+def getItemUnderCursor(view):
+    line = view.rowcol(view.sel()[0].a)[0]
+    path = dirname(view.window().project_file_name())
+    item = _index[path][line]
+    return item
+
+
+class LatexOutlinerOpenTextSnippet(TextCommand):
+    def run(self, edit):
+        item = getItemUnderCursor(self.view)
+        if type(item) is TextSnippet:
+            self.view.window().open_file(item.path)
+        elif type(item) is Heading:
+            print("idea: implement zoom in")
+
+
+class LatexOutlinerExpandCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        pos = view.sel()[0].a
+        if type(item) is Heading:
+            item.expanded = True
+            view.run_command("populate_outline_view", {'cursor': pos})

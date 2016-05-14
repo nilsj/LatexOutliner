@@ -245,6 +245,6 @@ class LatexOutlinerExpandCommand(TextCommand):
         view = self.view
         item = getItemUnderCursor(view)
         pos = view.sel()[0].a
-        if type(item) is Heading:
+        if type(item) is Heading and not item.expanded:
             item.expanded = True
             view.run_command("populate_outline_view", {'cursor': pos})

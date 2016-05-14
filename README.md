@@ -14,7 +14,6 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 - move items in outline view
 - create new Heading
 - create new TextSnippet
-- open TextSnippet
 - generate outline.tex from outline
 - import outline from filesystem
 - export outline to filesystem

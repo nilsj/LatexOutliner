@@ -31,7 +31,7 @@ OUTLINE_JSON = "outline.json"
 
 def dump_outline(project_path):
     with open(join(project_path, OUTLINE_JSON), 'w', encoding='utf-8') as f:
-        dump(_outline[project_path].getJson(), f)
+        dump(_outline[project_path].getJson(), f, indent=2)
 
 
 def load_outline(project_path):
@@ -134,12 +134,12 @@ class PopulateOutlineViewCommand(TextCommand):
         view.set_read_only(False)
         # clear view
         view.erase(edit, Region(0, view.size()))
-        # todo: folding
         # walk outline and insert in view
         project_root = dirname(view.window().project_file_name())
         global _index
         _index[project_root] = self.showOutline(edit,
                                                 get_outline(project_root))
+        # set the cursor position
         if cursor:
             view.show(cursor)
             view.sel().clear()
@@ -176,17 +176,19 @@ class Heading():
         child.parent = self
 
     def getJson(self):
-        _json = {'class': 'Heading',
-                 'caption': self.caption,
-                 'children': []
-                 }
+        json = {'class': 'Heading',
+                'caption': self.caption,
+                'children': [],
+                'expanded': self.expanded
+                }
         for child in self.children:
-            _json['children'].append(child.getJson())
-        return _json
+            json['children'].append(child.getJson())
+        return json
 
     @staticmethod
     def fromJson(json):
         heading = Heading(json['caption'])
+        heading.expanded = json['expanded']
         for child in json['children']:
             if child['class'] == 'Heading':
                 childClass = Heading
@@ -273,5 +275,6 @@ class LatexOutlinerCollapseCommand(TextCommand):
                 parent.expanded = False
                 pos = view.sel()[0].a
                 # todo: determine postition of parent and set pos to it
+                # idea: just store linenumbers in the object
                 view.run_command("populate_outline_view", {'cursor': pos})
 

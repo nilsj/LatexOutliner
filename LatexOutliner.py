@@ -8,10 +8,11 @@ from shutil import copyfile
 from itertools import count
 from json import dump, load
 
-# todo: load outline from disk in plugin_loaded
-# todo: write outline to disk in plugin_unloaded
-# todo: make outline dict so it supports multiple projects
+
+# the actual outlines (tree)
 _outline = {}
+# maps line number back to tree items
+_index = {}
 
 
 def plugin_unloaded():
@@ -20,7 +21,6 @@ def plugin_unloaded():
 
 
 def get_outline(project_path):
-    global _outline
     if project_path not in _outline:
         _outline[project_path] = load_outline(project_path)
     return _outline[project_path]
@@ -85,8 +85,8 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
 
         # idea: ask if an example outline should be created
 
-        # note: wahrscheinlich muss die Struktur woanders gespeichert werden
-        outline = Heading("outline")
+        outline = Heading("Outline")
+        outline.expanded = True
         for i in range(3):
             section = Heading("Section "+str(i+1))
             outline.appendChild(section)
@@ -132,23 +132,34 @@ class PopulateOutlineViewCommand(TextCommand):
 
         # todo: folding
         # walk outline and insert in view
-        self.showOutline(edit, get_outline(dirname(self.view.window().project_file_name())))
+        project_root = dirname(self.view.window().project_file_name())
+        global _index
+        _index[project_root] = self.showOutline(edit, get_outline(project_root))
 
         self.view.set_read_only(True)
 
+    # idea: set caption of root element as view title
     def showOutline(self, edit, item, lineCount=count(), level=0, indent='  '):
-        text = indent*level+item.caption+"\n"
-        self.view.insert(edit,
-                         self.view.text_point(next(lineCount), 0), text)
         if type(item) is Heading:
+            if item.expanded:
+                text = indent*level+"▾"+item.caption+"\n"
+            else:
+                text = indent*level+"▸"+item.caption+"\n"
+        elif type(item) is TextSnippet:
+            text = indent*level+"≡"+item.caption+"\n"
+        self.view.insert(edit, self.view.text_point(next(lineCount), 0), text)
+        index = [item]
+        if type(item) is Heading and item.expanded:
             for child in item.children:
-                self.showOutline(edit, child, lineCount, level+1)
+                index.extend(self.showOutline(edit, child, lineCount, level+1))
+        return index
 
 
 class Heading():
     def __init__(self, caption):
         self.caption = caption
         self.children = []
+        self.expanded = False
 
     def appendChild(self, child):
         self.children.append(child)
@@ -197,6 +208,7 @@ class TextSnippet():
         return text
 
 
+# todo: find good way to generate fresh file names
 def get_fresh_path():
     i = 0
     # todo: set new_path_directory

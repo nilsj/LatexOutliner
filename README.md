@@ -10,6 +10,11 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
+- fold/unfold in outline view
+- move items in outline view
+- create new Heading
+- create new TextSnippet
+- open TextSnippet
 - generate outline.tex from outline
 - import outline from filesystem
 - export outline to filesystem

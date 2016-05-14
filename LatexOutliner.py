@@ -163,14 +163,17 @@ class PopulateOutlineViewCommand(TextCommand):
         return index
 
 
+# todo: expanded in getJson and fromJson
 class Heading():
     def __init__(self, caption):
         self.caption = caption
+        self.parent = None
         self.children = []
         self.expanded = False
 
     def appendChild(self, child):
         self.children.append(child)
+        child.parent = self
 
     def getJson(self):
         _json = {'class': 'Heading',
@@ -227,15 +230,21 @@ def get_fresh_path():
 def getItemUnderCursor(view):
     line = view.rowcol(view.sel()[0].a)[0]
     path = dirname(view.window().project_file_name())
-    item = _index[path][line]
-    return item
+    if line < len(_index[path]):
+        item = _index[path][line]
+        return item
+    else:
+        return None
 
 
 class LatexOutlinerOpenTextSnippet(TextCommand):
     def run(self, edit):
-        item = getItemUnderCursor(self.view)
+        view = self.view
+        item = getItemUnderCursor(view)
         if type(item) is TextSnippet:
-            self.view.window().open_file(item.path)
+            new = view.window().open_file(item.path)
+            # todo: if view already open, only focus
+            view.window().set_view_index(new, 1, 0)
         elif type(item) is Heading:
             print("idea: implement zoom in")
 
@@ -244,7 +253,25 @@ class LatexOutlinerExpandCommand(TextCommand):
     def run(self, edit):
         view = self.view
         item = getItemUnderCursor(view)
-        pos = view.sel()[0].a
         if type(item) is Heading and not item.expanded:
             item.expanded = True
+            pos = view.sel()[0].a
             view.run_command("populate_outline_view", {'cursor': pos})
+
+
+class LatexOutlinerCollapseCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        if type(item) is Heading and item.expanded:
+            item.expanded = False
+            pos = view.sel()[0].a
+            view.run_command("populate_outline_view", {'cursor': pos})
+        elif type(item) is TextSnippet:
+            parent = item.parent
+            if parent.parent:
+                parent.expanded = False
+                pos = view.sel()[0].a
+                # todo: determine postition of parent and set pos to it
+                view.run_command("populate_outline_view", {'cursor': pos})
+

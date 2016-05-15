@@ -117,6 +117,7 @@ class LatexOutlinerCommand(WindowCommand):
 
         # create the new view and move it to the leftmost group
         view = self.window.new_file()
+        # idea: hide line numbers
         self.window.set_view_index(view, 0, 0)
         view.set_scratch(True)
         view.set_syntax_file(
@@ -129,7 +130,7 @@ class PopulateOutlineViewCommand(TextCommand):
     """
     Populates the outline view
     """
-    def run(self, edit, cursor=None):
+    def run(self, edit, cursorline=None):
         view = self.view
         view.set_read_only(False)
         # clear view
@@ -140,10 +141,11 @@ class PopulateOutlineViewCommand(TextCommand):
         _index[project_root] = self.showOutline(edit,
                                                 get_outline(project_root))
         # set the cursor position
-        if cursor:
-            view.show(cursor)
+        if cursorline:
+            point = view.text_point(cursorline, 0)
+            view.show(point)
             view.sel().clear()
-            view.sel().add(Region(cursor))
+            view.sel().add(Region(point))
         view.set_read_only(True)
 
     # idea: set caption of root element as view title
@@ -264,8 +266,8 @@ class LatexOutlinerExpandCommand(TextCommand):
         item = getItemUnderCursor(view)
         if type(item) is Heading and not item.expanded:
             item.expanded = True
-            pos = view.sel()[0].a
-            view.run_command("populate_outline_view", {'cursor': pos})
+            line = view.rowcol(view.sel()[0].a)[0]
+            view.run_command("populate_outline_view", {'cursorline': line})
 
 
 class LatexOutlinerCollapseCommand(TextCommand):
@@ -274,16 +276,16 @@ class LatexOutlinerCollapseCommand(TextCommand):
         item = getItemUnderCursor(view)
         if type(item) is Heading and item.expanded:
             item.expanded = False
-            pos = view.sel()[0].a
-            view.run_command("populate_outline_view", {'cursor': pos})
+            line = view.rowcol(view.sel()[0].a)[0]
+            view.run_command("populate_outline_view", {'cursorline': line})
         elif type(item) is TextSnippet:
             parent = item.parent
             if parent.parent:
                 parent.expanded = False
-                pos = view.sel()[0].a
                 # todo: determine postition of parent and set pos to it
                 # idea: just store linenumbers in the object
-                view.run_command("populate_outline_view", {'cursor': pos})
+                line = view.rowcol(view.sel()[0].a)[0]
+                view.run_command("populate_outline_view", {'cursorline': line})
 
 
 class LatexOutlinerMoveUpCommand(TextCommand):
@@ -296,8 +298,21 @@ class LatexOutlinerMoveUpCommand(TextCommand):
         else:
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position-1)
-            row, col = view.rowcol(view.sel()[0].a)
-            # todo: die position funktioniert noch nicht so, wie
-            # ich es erwarte
-            pos = row-1, col
-            view.run_command("populate_outline_view", {'cursor': pos})
+            row = view.rowcol(view.sel()[0].a)[0]
+            line = row-1
+            view.run_command("populate_outline_view", {'cursorline': line})
+
+
+class LatexOutlinerMoveDownCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        position = item.parent.children.index(item)
+        if position == len(item.parent.children)-1:
+            return
+        else:
+            item.parent.removeChild(item)
+            item.parent.insertChildAt(item, position+1)
+            row = view.rowcol(view.sel()[0].a)[0]
+            line = row+1
+            view.run_command("populate_outline_view", {'cursorline': line})

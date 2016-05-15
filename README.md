@@ -10,15 +10,13 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- move items in outline view
+- indent/outdent items in outline view
 - create new Heading
 - create new TextSnippet
 - generate outline.tex from outline
 - import outline from filesystem
 - export outline to filesystem
-
-### Later
-- Determine the ID if the window used with LO and pass it to all commands
+- Zoom in outline (focus on a section)
 
 ### Wishlist
 - Drag'n'Drop outline

@@ -21,8 +21,15 @@
       ]
   },
   {
-      "keys": ["shift+up"],
+      "keys": ["super+up"],
       "command": "latex_outliner_move_up",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["super+down"],
+      "command": "latex_outliner_move_down",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]

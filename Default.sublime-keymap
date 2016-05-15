@@ -33,5 +33,19 @@
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
+  },
+  {
+      "keys": ["super+left"],
+      "command": "latex_outliner_outdent",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["super+right"],
+      "command": "latex_outliner_indent",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
   }
 ]

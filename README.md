@@ -10,7 +10,6 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- indent/outdent items in outline view
 - create new Heading
 - create new TextSnippet
 - generate outline.tex from outline

@@ -157,7 +157,9 @@ class PopulateOutlineViewCommand(TextCommand):
                 text = indent*level+"▸"+item.caption+"\n"
         elif type(item) is TextSnippet:
             text = indent*level+"≡"+item.caption+"\n"
-        self.view.insert(edit, self.view.text_point(next(lineCount), 0), text)
+        line = next(lineCount)
+        self.view.insert(edit, self.view.text_point(line, 0), text)
+        item.linenumber = line
         index = [item]
         if type(item) is Heading and item.expanded:
             for child in item.children:
@@ -284,7 +286,7 @@ class LatexOutlinerCollapseCommand(TextCommand):
                 parent.expanded = False
                 # todo: determine postition of parent and set pos to it
                 # idea: just store linenumbers in the object
-                line = view.rowcol(view.sel()[0].a)[0]
+                line = parent.linenumber
                 view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -299,6 +301,7 @@ class LatexOutlinerMoveUpCommand(TextCommand):
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position-1)
             row = view.rowcol(view.sel()[0].a)[0]
+            # todo: adjust newlinenumber for unfolded headings above
             line = row-1
             view.run_command("populate_outline_view", {'cursorline': line})
 
@@ -314,5 +317,50 @@ class LatexOutlinerMoveDownCommand(TextCommand):
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position+1)
             row = view.rowcol(view.sel()[0].a)[0]
+            # todo: adjust newlinenumber for unfolded headings below
             line = row+1
             view.run_command("populate_outline_view", {'cursorline': line})
+
+
+class LatexOutlinerOutdentCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        # cannot move outside of tree
+        if not item.parent.parent:
+            return
+        item.parent.removeChild(item)
+        parent_position = item.parent.parent.children.index(item.parent)
+        item.parent.parent.insertChildAt(item, parent_position+1)
+        # todo: linenumbers don't work as expected
+        # get correct new line, (old) position of next sibling
+        if parent_position+2 < len(item.parent.children):
+            line = item.parent.children[parent_position+2].linenumber
+        else:
+            line = item.parent.children[parent_position+1].linenumber
+        view.run_command("populate_outline_view", {'cursorline': line})
+
+
+class LatexOutlinerIndentCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        # can only move inside if heading is above
+        position = item.parent.children.index(item)
+        if position == 0:
+            return
+        new_parent = item.parent.children[position-1]
+        if type(new_parent) is not Heading:
+            return
+        item.parent.removeChild(item)
+        new_parent.appendChild(item)
+        new_parent.expanded = True
+        # todo: linenumbers don't work as expected
+        # get correct new line, (old) position of next sibling
+        number_siblings = len(new_parent.children)
+        if number_siblings is 1:
+            line = new_parent.linenumber+1
+        else:
+            line = new_parent.children[number_siblings-2].linenumber
+        view.run_command("populate_outline_view", {'cursorline': line})
+

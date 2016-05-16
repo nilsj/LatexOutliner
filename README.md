@@ -10,7 +10,6 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- delete item with confirmation
 - generate outline.tex from outline
 - import outline from filesystem
 - export outline to filesystem

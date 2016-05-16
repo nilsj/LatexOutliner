@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from sublime import message_dialog, packages_path, Region
+from sublime import message_dialog, packages_path, Region, ok_cancel_dialog
 from sublime_plugin import WindowCommand, TextCommand
 from os.path import join, dirname
 from shutil import copyfile
@@ -188,16 +188,16 @@ class Heading():
     def removeChild(self, item):
         self.children.remove(item)
 
-    def getNumberOfVisibleChildren(self):
-        number_of_visible_children = 0
-        if not self.expanded:
-            return number_of_visible_children
+    def getNumberOfChildren(self, onlyVisible=False):
+        number_of_children = 0
+        if onlyVisible and not self.expanded:
+            return number_of_children
         for child in self.children:
-            number_of_visible_children += 1
+            number_of_children += 1
             if type(child) is Heading:
-                number_of_visible_children += \
-                    child.getNumberOfVisibleChildren()
-        return number_of_visible_children
+                number_of_children += child.getNumberOfChildren(
+                    onlyVisible)
+        return number_of_children
 
     def getJson(self):
         json = {'class': 'Heading',
@@ -332,9 +332,9 @@ class LatexOutlinerMoveDownCommand(TextCommand):
             switched_sibling = item.parent.children[position]
             line = switched_sibling.linenumber
             if type(switched_sibling) is Heading:
-                line += switched_sibling.getNumberOfVisibleChildren()
+                line += switched_sibling.getNumberOfChildren(onlyVisible=True)
             if type(item) is Heading:
-                line -= item.getNumberOfVisibleChildren()
+                line -= item.getNumberOfChildren(onlyVisible=True)
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -352,7 +352,7 @@ class LatexOutlinerOutdentCommand(TextCommand):
         # new line is the old parent's linenumber plus one plus, recursively,
         # all children and, if expanded, their children
         line = old_parent.linenumber + 1
-        line += old_parent.getNumberOfVisibleChildren()
+        line += old_parent.getNumberOfChildren(onlyVisible=True)
         view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -372,9 +372,10 @@ class LatexOutlinerIndentCommand(TextCommand):
         new_parent.expanded = True
         # new line is parent's linenumber + all recursively visible children
         # minus the number of it's own visible children
-        line = new_parent.linenumber + new_parent.getNumberOfVisibleChildren()
+        line = new_parent.linenumber + new_parent.getNumberOfChildren(
+            onlyVisible=True)
         if type(item) is Heading:
-            line -= item.getNumberOfVisibleChildren()
+            line -= item.getNumberOfChildren(onlyVisible=True)
         view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -402,3 +403,24 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
             new_parent.insertChildAt(new_item, new_position)
         line = selectedItem.linenumber + 1
         self.view.run_command("populate_outline_view", {'cursorline': line})
+
+
+class LatexOutlinerDeleteItemCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        if type(item) is Heading:
+            child_count = item.getNumberOfChildren()
+            message = "Delete {} and it's {} children?".format(
+                item.caption, child_count)
+        else:
+            message = "Delete "+item.caption+"?"
+        message += "\n(There is no undo.)"
+        delete_ok = ok_cancel_dialog(message, "Delete "+item.caption)
+        if not delete_ok:
+            return
+        else:
+            line = item.linenumber
+            item.parent.removeChild(item)
+            self.view.run_command("populate_outline_view",
+                                  {'cursorline': line})

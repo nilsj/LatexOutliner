@@ -139,7 +139,8 @@ class PopulateOutlineViewCommand(TextCommand):
         project_root = dirname(view.window().project_file_name())
         global _index
         _index[project_root] = self.showOutline(edit,
-                                                get_outline(project_root))
+                                                get_outline(project_root),
+                                                count())
         # set the cursor position
         if cursorline:
             point = view.text_point(cursorline, 0)
@@ -149,7 +150,7 @@ class PopulateOutlineViewCommand(TextCommand):
         view.set_read_only(True)
 
     # idea: set caption of root element as view title
-    def showOutline(self, edit, item, lineCount=count(), level=0, indent='  '):
+    def showOutline(self, edit, item, lineCount, level=0, indent='  '):
         if type(item) is Heading:
             if item.expanded:
                 text = indent*level+"▾"+item.caption+"\n"
@@ -284,8 +285,6 @@ class LatexOutlinerCollapseCommand(TextCommand):
             parent = item.parent
             if parent.parent:
                 parent.expanded = False
-                # todo: determine postition of parent and set pos to it
-                # idea: just store linenumbers in the object
                 line = parent.linenumber
                 view.run_command("populate_outline_view", {'cursorline': line})
 
@@ -300,9 +299,8 @@ class LatexOutlinerMoveUpCommand(TextCommand):
         else:
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position-1)
-            row = view.rowcol(view.sel()[0].a)[0]
-            # todo: adjust newlinenumber for unfolded headings above
-            line = row-1
+            # new position is linenumber of switched sibling
+            line = item.parent.children[position].linenumber
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -316,9 +314,12 @@ class LatexOutlinerMoveDownCommand(TextCommand):
         else:
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position+1)
-            row = view.rowcol(view.sel()[0].a)[0]
-            # todo: adjust newlinenumber for unfolded headings below
-            line = row+1
+            # new position is linenumber of switched sibling
+            # plus it's children if expanded
+            switched_sibling = item.parent.children[position]
+            line = switched_sibling.linenumber
+            if type(switched_sibling) is Heading and switched_sibling.expanded:
+                line += len(switched_sibling.children)
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -329,15 +330,12 @@ class LatexOutlinerOutdentCommand(TextCommand):
         # cannot move outside of tree
         if not item.parent.parent:
             return
-        item.parent.removeChild(item)
-        parent_position = item.parent.parent.children.index(item.parent)
-        item.parent.parent.insertChildAt(item, parent_position+1)
-        # todo: linenumbers don't work as expected
-        # get correct new line, (old) position of next sibling
-        if parent_position+2 < len(item.parent.children):
-            line = item.parent.children[parent_position+2].linenumber
-        else:
-            line = item.parent.children[parent_position+1].linenumber
+        old_parent = item.parent
+        old_parent.removeChild(item)
+        parent_position = old_parent.parent.children.index(old_parent)
+        old_parent.parent.insertChildAt(item, parent_position+1)
+        # new position is one after last of old parent's children
+        line = old_parent.linenumber + len(old_parent.children) + 1
         view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -355,12 +353,7 @@ class LatexOutlinerIndentCommand(TextCommand):
         item.parent.removeChild(item)
         new_parent.appendChild(item)
         new_parent.expanded = True
-        # todo: linenumbers don't work as expected
-        # get correct new line, (old) position of next sibling
-        number_siblings = len(new_parent.children)
-        if number_siblings is 1:
-            line = new_parent.linenumber+1
-        else:
-            line = new_parent.children[number_siblings-2].linenumber
+        # new position is last of parent's children
+        line = new_parent.linenumber + len(new_parent.children)
         view.run_command("populate_outline_view", {'cursorline': line})
 

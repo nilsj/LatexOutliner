@@ -10,14 +10,14 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- rename item
+- on '?' show keyboard shortcuts
 - import outline from filesystem
 - export outline to filesystem
-- Zoom in outline (focus on a section)
 
 ### Later
 - move and in/outdent item with super h,j,k,l
 - move cursor with j,k
+- Zoom in outline (focus on a section)
 
 ### Wishlist
 - Drag'n'Drop outline

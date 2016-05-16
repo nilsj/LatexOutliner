@@ -67,6 +67,14 @@
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
   },
+  // Rename item
+  {
+      "keys": ["super+r"],
+      "command": "latex_outliner_rename_item",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
   // Delete item
   {
       "keys": ["super+d"],

@@ -430,6 +430,24 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
         self.view.run_command("populate_outline_view", {'cursorline': line})
 
 
+class LatexOutlinerRenameItemCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        on_done = partial(self.renameItem,
+                          selectedItem=item)
+        view.window().show_input_panel(caption="Rename",
+                                       initial_text=item.caption,
+                                       on_done=on_done,
+                                       on_change=None,
+                                       on_cancel=None)
+
+    def renameItem(self, caption, selectedItem):
+        selectedItem.caption = caption
+        line = selectedItem.linenumber
+        self.view.run_command("populate_outline_view", {'cursorline': line})
+
+
 class LatexOutlinerDeleteItemCommand(TextCommand):
     def run(self, edit):
         view = self.view

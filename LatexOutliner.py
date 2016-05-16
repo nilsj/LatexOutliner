@@ -188,6 +188,17 @@ class Heading():
     def removeChild(self, item):
         self.children.remove(item)
 
+    def getNumberOfVisibleChildren(self):
+        number_of_visible_children = 0
+        if not self.expanded:
+            return number_of_visible_children
+        for child in self.children:
+            number_of_visible_children += 1
+            if type(child) is Heading:
+                number_of_visible_children += \
+                    child.getNumberOfVisibleChildren()
+        return number_of_visible_children
+
     def getJson(self):
         json = {'class': 'Heading',
                 'caption': self.caption,
@@ -270,7 +281,7 @@ class LatexOutlinerExpandCommand(TextCommand):
         item = getItemUnderCursor(view)
         if type(item) is Heading and not item.expanded:
             item.expanded = True
-            line = view.rowcol(view.sel()[0].a)[0]
+            line = item.linenumber
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -280,7 +291,7 @@ class LatexOutlinerCollapseCommand(TextCommand):
         item = getItemUnderCursor(view)
         if type(item) is Heading and item.expanded:
             item.expanded = False
-            line = view.rowcol(view.sel()[0].a)[0]
+            line = item.linenumber
             view.run_command("populate_outline_view", {'cursorline': line})
         elif type(item) is TextSnippet:
             parent = item.parent
@@ -316,15 +327,17 @@ class LatexOutlinerMoveDownCommand(TextCommand):
             item.parent.removeChild(item)
             item.parent.insertChildAt(item, position+1)
             # new position is linenumber of switched sibling
-            # plus it's children if expanded
+            # plus it's recursivley visible children
+            # minus the recursivley visible children of the moved item
             switched_sibling = item.parent.children[position]
             line = switched_sibling.linenumber
-            if type(switched_sibling) is Heading and switched_sibling.expanded:
-                line += len(switched_sibling.children)
+            if type(switched_sibling) is Heading:
+                line += switched_sibling.getNumberOfVisibleChildren()
+            if type(item) is Heading:
+                line -= item.getNumberOfVisibleChildren()
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
-# todo: indent und outdent line number need to consider recursive unfolds
 class LatexOutlinerOutdentCommand(TextCommand):
     def run(self, edit):
         view = self.view
@@ -336,8 +349,10 @@ class LatexOutlinerOutdentCommand(TextCommand):
         old_parent.removeChild(item)
         parent_position = old_parent.parent.children.index(old_parent)
         old_parent.parent.insertChildAt(item, parent_position+1)
-        # new position is one after last of old parent's children
-        line = old_parent.linenumber + len(old_parent.children) + 1
+        # new line is the old parent's linenumber plus one plus, recursively,
+        # all children and, if expanded, their children
+        line = old_parent.linenumber + 1
+        line += old_parent.getNumberOfVisibleChildren()
         view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -355,8 +370,11 @@ class LatexOutlinerIndentCommand(TextCommand):
         item.parent.removeChild(item)
         new_parent.appendChild(item)
         new_parent.expanded = True
-        # new position is last of parent's children
-        line = new_parent.linenumber + len(new_parent.children)
+        # new line is parent's linenumber + all recursively visible children
+        # minus the number of it's own visible children
+        line = new_parent.linenumber + new_parent.getNumberOfVisibleChildren()
+        if type(item) is Heading:
+            line -= item.getNumberOfVisibleChildren()
         view.run_command("populate_outline_view", {'cursorline': line})
 
 

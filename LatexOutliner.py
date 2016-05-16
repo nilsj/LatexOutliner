@@ -7,6 +7,7 @@ from os.path import join, dirname
 from shutil import copyfile
 from itertools import count
 from json import dump, load
+from functools import partial
 
 
 # the actual outlines (tree)
@@ -323,6 +324,7 @@ class LatexOutlinerMoveDownCommand(TextCommand):
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
+# todo: indent und outdent line number need to consider recursive unfolds
 class LatexOutlinerOutdentCommand(TextCommand):
     def run(self, edit):
         view = self.view
@@ -357,3 +359,28 @@ class LatexOutlinerIndentCommand(TextCommand):
         line = new_parent.linenumber + len(new_parent.children)
         view.run_command("populate_outline_view", {'cursorline': line})
 
+
+class LatexOutlinerCreateNewItemCommand(TextCommand):
+    def run(self, edit, heading=True):
+        view = self.view
+        item = getItemUnderCursor(view)
+        on_done = partial(self.createNewItem,
+                          newItemClass=Heading if heading else TextSnippet,
+                          selectedItem=item)
+        user_info = "Create new "+("Heading" if heading else "TextSnippet")
+        view.window().show_input_panel(caption=user_info,
+                                       initial_text="",
+                                       on_done=on_done,
+                                       on_change=None,
+                                       on_cancel=None)
+
+    def createNewItem(self, caption, newItemClass, selectedItem):
+        new_item = newItemClass(caption)
+        if type(selectedItem) is Heading and selectedItem.expanded:
+            selectedItem.insertChildAt(new_item, 0)
+        else:
+            new_parent = selectedItem.parent
+            new_position = new_parent.children.index(selectedItem) + 1
+            new_parent.insertChildAt(new_item, new_position)
+        line = selectedItem.linenumber + 1
+        self.view.run_command("populate_outline_view", {'cursorline': line})

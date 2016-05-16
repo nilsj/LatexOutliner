@@ -10,6 +10,7 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
+- rename item
 - import outline from filesystem
 - export outline to filesystem
 - Zoom in outline (focus on a section)

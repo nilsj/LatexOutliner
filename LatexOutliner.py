@@ -4,6 +4,7 @@
 from sublime import message_dialog, packages_path, Region, ok_cancel_dialog
 from sublime_plugin import WindowCommand, TextCommand
 from os.path import join, dirname
+from os import mkdir, listdir
 from shutil import copyfile
 from itertools import count
 from json import dump, load
@@ -14,6 +15,8 @@ OUTLINE_JSON = "outline.json"
 OUTLINE_TEX_DISCLAIMER = (
     "% This file is populated automatically with " +
     "\"LatexOutliner: Update outline.tex\".")
+OUTLINE_DIRECTORY = "outline"
+NEW_SNIPPETS_DIRECTORY = "new text snippets"
 
 
 # the actual outlines (tree)
@@ -70,11 +73,7 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
             project_data['settings'] = {}
         project_data['settings']['TEXroot'] = "main.tex"
 
-        # set outline and new folders
-        project_data['outline_folder'] = "outline"
-        project_data['new_folder'] = "new"
-
-        # write project file
+        # write project settings
         self.window.set_project_data(project_data)
 
         # copy the example main file "main.tex" and open it
@@ -91,15 +90,21 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         with open(outline_file, 'w', encoding='utf-8') as f:
             f.write(OUTLINE_TEX_DISCLAIMER)
 
-        # idea: ask if an example outline should be created
+        # idea: warn if directories already exist
+        # create outline and new text snippets folders
+        outline_directory = join(project_root, OUTLINE_DIRECTORY)
+        mkdir(outline_directory)
+        new_snippets_directory = join(project_root, NEW_SNIPPETS_DIRECTORY)
+        mkdir(new_snippets_directory)
 
+        # idea: ask if an example outline should be created
         outline = Heading("Outline")
         outline.expanded = True
         for i in range(3):
             section = Heading("Section "+str(i+1))
             outline.appendChild(section)
             for j in range(4):
-                text = TextSnippet("Text Snippet "+str(j+1))
+                text = TextSnippet("Text Snippet "+str(j+1), project_root)
                 section.appendChild(text)
         _outline[project_root] = outline
 
@@ -232,13 +237,30 @@ class Heading():
 
 
 class TextSnippet():
-    def __init__(self, caption, path=None):
+    def __init__(self, caption, path, fresh=True):
+        """
+        if fresh, path is the project_root,
+        otherwise it is the path
+        """
         self.caption = caption
-        if path:
-            self.path = path
+        if fresh:
+            self.path = self.get_fresh_file(path)
         else:
-            # todo: create new file for snippet (?)
-            self.path = caption + "_path"
+            self.path = path
+
+    def get_fresh_file(self, project_root):
+        abs_path_to_new_snippets = join(project_root, NEW_SNIPPETS_DIRECTORY)
+        existing_files = listdir(abs_path_to_new_snippets)
+        i = len(existing_files)
+        while True:
+            fresh_name = "textSnippet"+str(i)
+            if fresh_name not in existing_files:
+                break
+            i += 1
+        full_fresh_name = join(abs_path_to_new_snippets, fresh_name)
+        with open(full_fresh_name, 'w', encoding='utf-8'):
+            pass
+        return join(NEW_SNIPPETS_DIRECTORY, fresh_name)
 
     def getJson(self):
         return {'class': 'TextSnippet',
@@ -248,16 +270,8 @@ class TextSnippet():
 
     @staticmethod
     def fromJson(json):
-        text = TextSnippet(json['caption'], json['path'])
+        text = TextSnippet(json['caption'], json['path'], fresh=False)
         return text
-
-
-# todo: find good way to generate fresh file names
-def get_fresh_path():
-    i = 0
-    # todo: set new_path_directory
-    new_files_directory = "new"
-    yield join(new_files_directory, "textSnippet"+str(i))
 
 
 def getItemUnderCursor(view):
@@ -391,7 +405,7 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
         view = self.view
         item = getItemUnderCursor(view)
         on_done = partial(self.createNewItem,
-                          newItemClass=Heading if heading else TextSnippet,
+                          newItemClass="Heading" if heading else "TextSnippet",
                           selectedItem=item)
         user_info = "Create new "+("Heading" if heading else "TextSnippet")
         view.window().show_input_panel(caption=user_info,
@@ -401,7 +415,11 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
                                        on_cancel=None)
 
     def createNewItem(self, caption, newItemClass, selectedItem):
-        new_item = newItemClass(caption)
+        if newItemClass == "Heading":
+            new_item = Heading(caption)
+        elif newItemClass == "TextSnippet":
+            project_root = dirname(self.view.window().project_file_name())
+            new_item = TextSnippet(caption, project_root)
         if type(selectedItem) is Heading and selectedItem.expanded:
             selectedItem.insertChildAt(new_item, 0)
         else:

@@ -10,6 +10,12 @@ from json import dump, load
 from functools import partial
 
 
+OUTLINE_JSON = "outline.json"
+OUTLINE_TEX_DISCLAIMER = (
+    "% This file is populated automatically with " +
+    "\"LatexOutliner: Update outline.tex\".")
+
+
 # the actual outlines (tree)
 _outline = {}
 # maps line number back to tree items
@@ -25,9 +31,6 @@ def get_outline(project_path):
     if project_path not in _outline:
         _outline[project_path] = load_outline(project_path)
     return _outline[project_path]
-
-
-OUTLINE_JSON = "outline.json"
 
 
 def dump_outline(project_path):
@@ -83,6 +86,10 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         copyfile(orginal_main, tex_root)
         # open main.tex
         self.window.open_file(tex_root)
+        # create emtpy outline.tex
+        outline_file = join(project_root, "outline.tex")
+        with open(outline_file, 'w', encoding='utf-8') as f:
+            f.write(OUTLINE_TEX_DISCLAIMER)
 
         # idea: ask if an example outline should be created
 
@@ -424,3 +431,44 @@ class LatexOutlinerDeleteItemCommand(TextCommand):
             item.parent.removeChild(item)
             self.view.run_command("populate_outline_view",
                                   {'cursorline': line})
+
+
+class LatexOutlinerUpdateOutlineTex(WindowCommand):
+    def run(self):
+        project_root = dirname(self.window.project_file_name())
+        outline = get_outline(project_root)
+
+        # todo: include this file automatic disclaimer
+        lines = [OUTLINE_TEX_DISCLAIMER]
+        lines.extend(self.traverseOutline(outline))
+        outline_file = join(project_root, "outline.tex")
+        with open(outline_file, 'w', encoding='utf-8') as f:
+            for line in lines:
+                f.write(line+"\n")
+
+    def traverseOutline(self, item, level=-1):
+        indent = '  '
+        lines = []
+        if type(item) is Heading:
+            # if item is not root element add section title
+            if item.parent:
+                lines.append('')
+                lines.append(indent*level+self.levelHeading(
+                    level, item.caption))
+            for child in item.children:
+                lines.extend(self.traverseOutline(child, level+1))
+            lines.append('')
+        elif type(item) is TextSnippet:
+            # todo: make sure path is correct and relative to project path
+            lines.append(indent*level+'\input{"'+item.path+'"}')
+        return lines
+
+    # todo: read base_level from settings
+    def levelHeading(self, level, title):
+        headings = ['\section',
+                    '\subsection',
+                    '\subsubsection',
+                    '\paragraph',
+                    '\subparagraph',
+                    ]
+        return headings[level]+'{'+title+'}'

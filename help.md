@@ -37,6 +37,7 @@ Shows the view containing the outline on the left.
 "LatexOutliner: Update outline.tex"
 Updates outline.tex so that it reflects the current outline in the outline view. This is necessary whenever you change the outline.
 When you only edit the content of text snippets, you don't need to run this command.
+You can open the command palette and hit "l, o, u" which should focus this command.
 
 "LatexOutliner: Show help"
 Shows the file you are reading. I hope it helps.

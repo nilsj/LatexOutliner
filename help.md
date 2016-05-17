@@ -5,6 +5,8 @@
 
 ## Modify shown elements
 - collapse/expand (or fold/unfold): "left/right"
+- zoom in (on heading): "enter"
+- zoom out (everywhere): "backspace"
 
 ## View file
 - open text snippet: "enter"

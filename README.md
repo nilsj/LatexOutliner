@@ -10,8 +10,6 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- don't show "outline" caption
-- Zoom in outline (focus on a section)
 - outline view smaller
 - import outline from filesystem
 - export outline to filesystem

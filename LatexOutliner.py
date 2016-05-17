@@ -163,7 +163,7 @@ class PopulateOutlineViewCommand(TextCommand):
     """
     Populates the outline view
     """
-    def run(self, edit, cursorline=None):
+    def run(self, edit, cursorline=0):
         view = self.view
         view.set_read_only(False)
         # clear view
@@ -175,11 +175,10 @@ class PopulateOutlineViewCommand(TextCommand):
         global _index
         _index[project_root] = self.showOutlineStart(edit, current_subtree)
         # set the cursor position
-        if cursorline:
-            point = view.text_point(cursorline, 0)
-            view.show(point)
-            view.sel().clear()
-            view.sel().add(Region(point))
+        point = view.text_point(cursorline, 0)
+        view.show(point)
+        view.sel().clear()
+        view.sel().add(Region(point))
         view.set_read_only(True)
 
     def showOutlineStart(self, edit, currentSubtree):
@@ -335,12 +334,26 @@ class LatexOutlinerZoomOutCommand(TextCommand):
         current_subtree = get_current_substree(project_root)
         if current_subtree.parent:
             global _current_subtree
-            _current_subtree[project_root] = current_subtree.parent
-            # todo: if item is none, select the current_subtree
-            # the new line is the number of the parent's visible children
-            # todo: what is the new linenumber?
-            # number of visible children of parent minus own plus linenumber
-            line = getItemUnderCursor(view).linenumber
+            new_subtree = current_subtree.parent
+            _current_subtree[project_root] = new_subtree
+            item = getItemUnderCursor(view)
+            line = -1
+            # todo: plus 1 für das item selbst, eventuell für jede ebene
+            if not item:
+                item = current_subtree
+            while item != new_subtree:
+                line += 1
+                # test for simple case
+                position = item.parent.children.index(item)
+                for i in range(position):
+                    previous_child = item.parent.children[i]
+                    line += 1
+                    if type(previous_child) is Heading:
+                        line += previous_child.getNumberOfChildren(onlyVisible=True)
+                item = item.parent
+
+            # the new line is the number of visible children before
+            # the item or it's parents respectively
             view.run_command("populate_outline_view", {'cursorline': line})
 
 

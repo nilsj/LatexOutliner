@@ -3,7 +3,7 @@
 
 from sublime import message_dialog, packages_path, Region, ok_cancel_dialog
 from sublime_plugin import WindowCommand, TextCommand
-from os.path import join, dirname
+from os.path import join, dirname, isdir
 from os import mkdir, listdir
 from shutil import copyfile
 from itertools import count
@@ -93,9 +93,14 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         # idea: warn if directories already exist
         # create outline and new text snippets folders
         outline_directory = join(project_root, OUTLINE_DIRECTORY)
-        mkdir(outline_directory)
+        if not isdir(outline_directory):
+            mkdir(outline_directory)
+        # idea: generate outline from filesystem if outline directory
         new_snippets_directory = join(project_root, NEW_SNIPPETS_DIRECTORY)
-        mkdir(new_snippets_directory)
+        if not isdir(new_snippets_directory):
+            mkdir(new_snippets_directory)
+            # idea: warn that new_snippets is not emtpy
+
 
         # idea: ask if an example outline should be created
         outline = Heading("Outline")
@@ -107,6 +112,14 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
                 text = TextSnippet("Text Snippet "+str(j+1), project_root)
                 section.appendChild(text)
         _outline[project_root] = outline
+
+        self.window.run_command("latex_outliner")
+
+        welcome_file = join(LO_path, "welcome.md")
+        welcome_view = self.window.open_file(welcome_file)
+        welcome_view.set_read_only(True)
+        welcome_view.set_scratch(True)
+        self.window.set_view_index(welcome_view, 1, 0)
 
         return
 
@@ -512,7 +525,9 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
 
 class LatexOutlinerShowHelpCommand(WindowCommand):
     def run(self):
-        shortcut_view = self.window.open_file("help.md")
+        LO_path = join(packages_path(), "LatexOutliner")
+        help_file = join(LO_path, "help.md")
+        shortcut_view = self.window.open_file(help_file)
         self.window.set_view_index(shortcut_view, 1, 0)
         shortcut_view.set_read_only(True)
         shortcut_view.set_scratch(True)

@@ -10,18 +10,17 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- on '?' show keyboard shortcuts
 - don't show "outline" caption
+- Zoom in outline (focus on a section)
 - outline view smaller
-- nicer style for outline view (check dired.hiddentmTheme)
-- hide cursor?
 - import outline from filesystem
 - export outline to filesystem
 
 ### Later
 - move and in/outdent item with super h,j,k,l
 - move cursor with j,k
-- Zoom in outline (focus on a section)
+- nicer style for outline view (check dired.hiddentmTheme)
+- hide cursor?
 
 ### Wishlist
 - Drag'n'Drop outline

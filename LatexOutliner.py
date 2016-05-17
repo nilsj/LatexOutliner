@@ -21,6 +21,8 @@ NEW_SNIPPETS_DIRECTORY = "new text snippets"
 
 # the actual outlines (tree)
 _outline = {}
+# a pointer to the current subtree
+_current_subtree = {}
 # maps line number back to tree items
 _index = {}
 
@@ -45,6 +47,12 @@ def load_outline(project_path):
     with open(join(project_path, OUTLINE_JSON), 'r', encoding='utf-8') as f:
         outline = Heading.fromJson(load(f))
     return outline
+
+
+def get_current_substree(project_path):
+    if project_path not in _current_subtree:
+        _current_subtree[project_path] = get_outline(project_path)
+    return _current_subtree[project_path]
 
 
 class SetUpLatexOutlinerProjectCommand(WindowCommand):
@@ -148,7 +156,6 @@ class LatexOutlinerCommand(WindowCommand):
         view.set_scratch(True)
         view.set_syntax_file(
             'Packages/LatexOutliner/LatexOutliner.hidden-tmLanguage')
-        view.set_name("Outline")
         view.run_command("populate_outline_view")
 
 
@@ -163,10 +170,10 @@ class PopulateOutlineViewCommand(TextCommand):
         view.erase(edit, Region(0, view.size()))
         # walk outline and insert in view
         project_root = dirname(view.window().project_file_name())
+        current_subtree = get_current_substree(project_root)
+        view.set_name(current_subtree.caption)
         global _index
-        _index[project_root] = self.showOutline(edit,
-                                                get_outline(project_root),
-                                                count())
+        _index[project_root] = self.showOutlineStart(edit, current_subtree)
         # set the cursor position
         if cursorline:
             point = view.text_point(cursorline, 0)
@@ -175,7 +182,13 @@ class PopulateOutlineViewCommand(TextCommand):
             view.sel().add(Region(point))
         view.set_read_only(True)
 
-    # idea: set caption of root element as view title
+    def showOutlineStart(self, edit, currentSubtree):
+        lineCount = count()
+        index = []
+        for child in currentSubtree.children:
+            index.extend(self.showOutline(edit, child, lineCount))
+        return index
+
     def showOutline(self, edit, item, lineCount, level=0, indent='  '):
         if type(item) is Heading:
             if item.expanded:
@@ -297,16 +310,38 @@ def getItemUnderCursor(view):
         return None
 
 
-class LatexOutlinerOpenTextSnippet(TextCommand):
+class LatexOutlinerOpenTextSnippetOrZoomIn(TextCommand):
     def run(self, edit):
         view = self.view
         item = getItemUnderCursor(view)
+        project_root = dirname(view.window().project_file_name())
         if type(item) is TextSnippet:
-            new = view.window().open_file(item.path)
+            text_snippet_path = join(project_root, item.path)
+            new = view.window().open_file(text_snippet_path)
             # todo: if view already open, only focus
             view.window().set_view_index(new, 1, 0)
         elif type(item) is Heading:
-            print("idea: implement zoom in")
+            # don't zoom in if no children
+            if item.children:
+                _current_subtree[project_root] = item
+                item.expanded = True
+                view.run_command("populate_outline_view", {'cursorline': 0})
+
+
+class LatexOutlinerZoomOutCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        project_root = dirname(view.window().project_file_name())
+        current_subtree = get_current_substree(project_root)
+        if current_subtree.parent:
+            global _current_subtree
+            _current_subtree[project_root] = current_subtree.parent
+            # todo: if item is none, select the current_subtree
+            # the new line is the number of the parent's visible children
+            # todo: what is the new linenumber?
+            # number of visible children of parent minus own plus linenumber
+            line = getItemUnderCursor(view).linenumber
+            view.run_command("populate_outline_view", {'cursorline': line})
 
 
 class LatexOutlinerExpandCommand(TextCommand):

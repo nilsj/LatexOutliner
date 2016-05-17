@@ -1,7 +1,15 @@
 [
+  // Open text snippet or zoom
   {
       "keys": ["enter"],
-      "command": "latex_outliner_open_text_snippet",
+      "command": "latex_outliner_open_text_snippet_or_zoom_in",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["backspace"],
+      "command": "latex_outliner_zoom_out",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]

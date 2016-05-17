@@ -30,6 +30,7 @@ _index = {}
 def plugin_unloaded():
     for project_path in _outline:
         dump_outline(project_path)
+    # idea: close all outline views
 
 
 def get_outline(project_path):
@@ -109,17 +110,19 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
             mkdir(new_snippets_directory)
             # idea: warn that new_snippets is not emtpy
 
-
-        # idea: ask if an example outline should be created
         outline = Heading("Outline")
         outline.expanded = True
-        for i in range(3):
-            section = Heading("Section "+str(i+1))
-            outline.appendChild(section)
-            for j in range(4):
-                text = TextSnippet("Text Snippet "+str(j+1), project_root)
-                section.appendChild(text)
         _outline[project_root] = outline
+        # ask if an example outline should be created
+        example_outline = ok_cancel_dialog(
+             "Should an example outline be created?", "Create example outline")
+        if example_outline:
+            for i in range(3):
+                section = Heading("Section "+str(i+1))
+                outline.appendChild(section)
+                for j in range(4):
+                    text = TextSnippet("Text Snippet "+str(j+1), project_root)
+                    section.appendChild(text)
 
         self.window.run_command("latex_outliner")
 
@@ -140,14 +143,15 @@ class LatexOutlinerCommand(WindowCommand):
         # todo: Determine the number of groups and set up a new layout
         # with one more group
         # set up a two group layout
-        self.window.set_layout({"cols": [0.0, 0.5, 1.0],
+        width = 0.3
+        self.window.set_layout({"cols": [0.0, width, 1.0],
                                 "rows": [0.0, 1.0],
                                 "cells": [[0, 0, 1, 1], [1, 0, 2, 1]]})
 
-        # # move all other views one group to the right
-        # for group in reversed(range(self.window.num_groups())):
-        #     for view in reversed(self.window.views_in_group(group)):
-        #         self.window.set_view_index(view, group+1, 0)
+        # move all other views one group to the right
+        for group in reversed(range(self.window.num_groups())):
+            for view in reversed(self.window.views_in_group(group)):
+                self.window.set_view_index(view, group+1, 0)
 
         # create the new view and move it to the leftmost group
         view = self.window.new_file()
@@ -166,6 +170,8 @@ class PopulateOutlineViewCommand(TextCommand):
     def run(self, edit, cursorline=0):
         view = self.view
         view.set_read_only(False)
+        # todo: weg nur test
+        print("PopulateOutlineViewCommand")
         # clear view
         view.erase(edit, Region(0, view.size()))
         # walk outline and insert in view
@@ -278,7 +284,7 @@ class TextSnippet():
         existing_files = listdir(abs_path_to_new_snippets)
         i = len(existing_files)
         while True:
-            fresh_name = "textSnippet"+str(i)
+            fresh_name = "textSnippet"+str(i)+".tex"
             if fresh_name not in existing_files:
                 break
             i += 1
@@ -320,11 +326,9 @@ class LatexOutlinerOpenTextSnippetOrZoomIn(TextCommand):
             # todo: if view already open, only focus
             view.window().set_view_index(new, 1, 0)
         elif type(item) is Heading:
-            # don't zoom in if no children
-            if item.children:
-                _current_subtree[project_root] = item
-                item.expanded = True
-                view.run_command("populate_outline_view", {'cursorline': 0})
+            _current_subtree[project_root] = item
+            item.expanded = True
+            view.run_command("populate_outline_view", {'cursorline': 0})
 
 
 class LatexOutlinerZoomOutCommand(TextCommand):
@@ -337,8 +341,11 @@ class LatexOutlinerZoomOutCommand(TextCommand):
             new_subtree = current_subtree.parent
             _current_subtree[project_root] = new_subtree
             item = getItemUnderCursor(view)
+            # the new line is the sum of all recursive visible children
+            # of the new_subtree before the selected item
+            # this includes the current loop item for each execution
+            # except the first
             line = -1
-            # todo: plus 1 für das item selbst, eventuell für jede ebene
             if not item:
                 item = current_subtree
             while item != new_subtree:
@@ -349,11 +356,9 @@ class LatexOutlinerZoomOutCommand(TextCommand):
                     previous_child = item.parent.children[i]
                     line += 1
                     if type(previous_child) is Heading:
-                        line += previous_child.getNumberOfChildren(onlyVisible=True)
+                        line += previous_child.getNumberOfChildren(
+                            onlyVisible=True)
                 item = item.parent
-
-            # the new line is the number of visible children before
-            # the item or it's parents respectively
             view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -476,18 +481,24 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
                                        on_cancel=None)
 
     def createNewItem(self, caption, newItemClass, selectedItem):
+        project_root = dirname(self.view.window().project_file_name())
         if newItemClass == "Heading":
             new_item = Heading(caption)
         elif newItemClass == "TextSnippet":
-            project_root = dirname(self.view.window().project_file_name())
             new_item = TextSnippet(caption, project_root)
-        if type(selectedItem) is Heading and selectedItem.expanded:
+
+        if selectedItem is None:
+            current_subtree = get_current_substree(project_root)
+            current_subtree.appendChild(new_item)
+            line = current_subtree.getNumberOfChildren(onlyVisible=True)-1
+        elif type(selectedItem) is Heading and selectedItem.expanded:
             selectedItem.insertChildAt(new_item, 0)
+            line = selectedItem.linenumber + 1
         else:
             new_parent = selectedItem.parent
             new_position = new_parent.children.index(selectedItem) + 1
             new_parent.insertChildAt(new_item, new_position)
-        line = selectedItem.linenumber + 1
+            line = selectedItem.linenumber + 1
         self.view.run_command("populate_outline_view", {'cursorline': line})
 
 
@@ -535,7 +546,6 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
         project_root = dirname(self.window.project_file_name())
         outline = get_outline(project_root)
 
-        # todo: include this file automatic disclaimer
         lines = [OUTLINE_TEX_DISCLAIMER]
         lines.extend(self.traverseOutline(outline))
         outline_file = join(project_root, "outline.tex")

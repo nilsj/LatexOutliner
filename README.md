@@ -11,6 +11,10 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 
 ## Todos
 - on '?' show keyboard shortcuts
+- don't show "outline" caption
+- outline view smaller
+- nicer style for outline view (check dired.hiddentmTheme)
+- hide cursor?
 - import outline from filesystem
 - export outline to filesystem
 

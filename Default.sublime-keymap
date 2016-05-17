@@ -82,5 +82,13 @@
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
+  },
+  // Show help
+  {
+      "keys": ["?"],
+      "command": "latex_outliner_show_help",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
   }
 ]

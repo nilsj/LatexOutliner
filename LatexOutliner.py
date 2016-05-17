@@ -508,3 +508,11 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                     '\subparagraph',
                     ]
         return headings[level]+'{'+title+'}'
+
+
+class LatexOutlinerShowHelpCommand(WindowCommand):
+    def run(self):
+        shortcut_view = self.window.open_file("help.md")
+        self.window.set_view_index(shortcut_view, 1, 0)
+        shortcut_view.set_read_only(True)
+        shortcut_view.set_scratch(True)

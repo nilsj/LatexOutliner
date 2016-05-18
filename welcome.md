@@ -14,15 +14,3 @@ Most people should modify main.tex. The only important thing is to include the l
 
 Have fun!
 Nils
-
-
-P.S.:
-If you haven't it is probably a good idea to set up a short cut to update outline.tex. You can add something like this to your user shortcuts (SublimeText -> Preferences -> Key Bindings - User):
-
-```
-[
-    { "keys": ["super+shift+u"], "command": "latex_outliner_update_outline_tex" }
-]
-```
-
-If you prefer not to, command palette LOU is also quick and does the trick for me.

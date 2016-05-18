@@ -10,12 +10,13 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
 ## Todos
-- import outline from filesystem
-- export outline to filesystem
-
-### Later
 - move and in/outdent item with super h,j,k,l
 - move cursor with j,k
+- Enable build tex from outline view 
+
+### Later
+- import outline from filesystem
+- export outline to filesystem
 - nicer style for outline view (check dired.hiddentmTheme)
 - hide cursor?
 

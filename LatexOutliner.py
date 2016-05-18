@@ -169,13 +169,17 @@ class PopulateOutlineViewCommand(TextCommand):
     """
     def run(self, edit, cursorline=0):
         view = self.view
+        # todo: find better place, only when the outline got changed
+        # dump outline to be save
+        project_root = dirname(view.window().project_file_name())
+        dump_outline(project_root)
+        # update outline.tex
+        view.window().run_command("latex_outliner_update_outline_tex")
+        # now populate the view
         view.set_read_only(False)
-        # todo: weg nur test
-        print("PopulateOutlineViewCommand")
         # clear view
         view.erase(edit, Region(0, view.size()))
         # walk outline and insert in view
-        project_root = dirname(view.window().project_file_name())
         current_subtree = get_current_substree(project_root)
         view.set_name(current_subtree.caption)
         global _index

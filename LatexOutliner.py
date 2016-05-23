@@ -77,6 +77,9 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         # idea: if folders are not set, ok_cancel to set to "."
         # set the project folder to '.'
         project_data['folders'] = [{'path': '.'}]
+        # idea: ask if beamer should be set to true
+        # todo: check how to write true in settings
+        project_data['beamer'] = False
         # set TEXroot
         if 'settings' not in project_data:
             project_data['settings'] = {}
@@ -169,17 +172,11 @@ class PopulateOutlineViewCommand(TextCommand):
     """
     def run(self, edit, cursorline=0):
         view = self.view
-        # todo: find better place, only when the outline got changed
-        # dump outline to be save
-        project_root = dirname(view.window().project_file_name())
-        dump_outline(project_root)
-        # update outline.tex
-        view.window().run_command("latex_outliner_update_outline_tex")
-        # now populate the view
         view.set_read_only(False)
         # clear view
         view.erase(edit, Region(0, view.size()))
         # walk outline and insert in view
+        project_root = dirname(view.window().project_file_name())
         current_subtree = get_current_substree(project_root)
         view.set_name(current_subtree.caption)
         global _index
@@ -190,6 +187,11 @@ class PopulateOutlineViewCommand(TextCommand):
         view.sel().clear()
         view.sel().add(Region(point))
         view.set_read_only(True)
+        # todo: find better place, only when the outline got changed
+        # dump outline to be save
+        dump_outline(project_root)
+        # update outline.tex
+        view.window().run_command("latex_outliner_update_outline_tex")
 
     def showOutlineStart(self, edit, currentSubtree):
         lineCount = count()
@@ -201,11 +203,11 @@ class PopulateOutlineViewCommand(TextCommand):
     def showOutline(self, edit, item, lineCount, level=0, indent='  '):
         if type(item) is Heading:
             if item.expanded:
-                text = indent*level+"▾"+item.caption+"\n"
+                text = indent*level+"▾ "+item.caption+"\n"
             else:
-                text = indent*level+"▸"+item.caption+"\n"
+                text = indent*level+"▸ "+item.caption+"\n"
         elif type(item) is TextSnippet:
-            text = indent*level+"≡"+item.caption+"\n"
+            text = indent*level+"≡ "+item.caption+"\n"
         line = next(lineCount)
         self.view.insert(edit, self.view.text_point(line, 0), text)
         item.linenumber = line
@@ -550,14 +552,16 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
         project_root = dirname(self.window.project_file_name())
         outline = get_outline(project_root)
 
-        lines = [OUTLINE_TEX_DISCLAIMER]
-        lines.extend(self.traverseOutline(outline))
+        lines = [OUTLINE_TEX_DISCLAIMER, '']
+        project_data = self.window.project_data()
+        beamer = project_data['beamer']
+        lines.extend(self.traverseOutline(outline, beamer=beamer))
         outline_file = join(project_root, "outline.tex")
         with open(outline_file, 'w', encoding='utf-8') as f:
             for line in lines:
                 f.write(line+"\n")
 
-    def traverseOutline(self, item, level=-1):
+    def traverseOutline(self, item, level=-1, beamer=False):
         indent = '  '
         lines = []
         if type(item) is Heading:
@@ -567,11 +571,15 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                 lines.append(indent*level+self.levelHeading(
                     level, item.caption))
             for child in item.children:
-                lines.extend(self.traverseOutline(child, level+1))
+                lines.extend(self.traverseOutline(child, level+1, beamer))
             lines.append('')
         elif type(item) is TextSnippet:
-            # todo: make sure path is correct and relative to project path
+            if beamer:
+                lines.append(indent*level+'\\begin{frame}')
+                lines.append(indent*level+'\\frametitle{'+item.caption+'}')
             lines.append(indent*level+'\input{"'+item.path+'"}')
+            if beamer:
+                lines.append(indent*level+'\end{frame}')
         return lines
 
     # todo: read base_level from settings

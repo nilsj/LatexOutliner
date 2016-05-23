@@ -16,6 +16,9 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 - press `?` for help in the outline view
 - If the outline view is not responding e.g. after you close and open the project, close it and use "LatexOuteliner: Show outline on the left"
 
+### Beamer
+If you set the "beamer" property to true in the project settings, then each text snippet will be surrounded by a frame, and the frame title will be the title of the text snippet.
+
 ## Todos
 - move and in/outdent item with super h,j,k,l
 - move cursor with j,k
@@ -23,10 +26,12 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 - Refresh dead outline view
 
 ### Later
-- import outline from filesystem
 - export outline to filesystem
+- import outline from filesystem
+- move cursor to open text snippet in focus
 - nicer style for outline view (check dired.hiddentmTheme)
 - hide cursor?
 
 ### Wishlist
 - Drag'n'Drop outline
+- Context menus for mouse interaction

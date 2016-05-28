@@ -390,7 +390,8 @@ class LatexOutlinerCollapseCommand(TextCommand):
             item.expanded = False
             line = item.linenumber
             view.run_command("populate_outline_view", {'cursorline': line})
-        elif type(item) is TextSnippet:
+        elif (type(item) is TextSnippet or
+              type(item) is Heading and not item.expanded):
             parent = item.parent
             if parent.parent:
                 parent.expanded = False

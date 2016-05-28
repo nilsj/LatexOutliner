@@ -314,6 +314,10 @@ class TextSnippet():
 def getItemUnderCursor(view):
     line = view.rowcol(view.sel()[0].a)[0]
     path = dirname(view.window().project_file_name())
+    # if _index[path] is not set, outline view is dead and should be refreshed
+    if path not in _index:
+        view.run_command("populate_outline_view", {'cursorline': line})
+        return None
     if line < len(_index[path]):
         item = _index[path][line]
         return item

@@ -14,7 +14,7 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 - Save a new project in SublimeText
 - Command palette: "LatexOutliner: Set up project"
 - press `?` for help in the outline view
-- If the outline view is not responding e.g. after you close and open the project, close it and use "LatexOuteliner: Show outline on the left"
+- If the outline view is not visible later on, use "LatexOuteliner: Show outline on the left" in the command palette.
 
 ### Beamer
 If you set the "beamer" property to true in the project settings, then each text snippet will be surrounded by a frame, and the frame title will be the title of the text snippet.

@@ -20,10 +20,8 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 If you set the "beamer" property to true in the project settings, then each text snippet will be surrounded by a frame, and the frame title will be the title of the text snippet.
 
 ## Todos
-- move and in/outdent item with super h,j,k,l
-- move cursor with j,k
+- move cursor with j,k (for non-vintageous users)
 - Enable build tex from outline view 
-- Refresh dead outline view
 
 ### Later
 - export outline to filesystem

@@ -23,7 +23,21 @@
       ]
   },
   {
+      "keys": ["l"],
+      "command": "latex_outliner_expand",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
       "keys": ["left"],
+      "command": "latex_outliner_collapse",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["h"],
       "command": "latex_outliner_collapse",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
@@ -38,7 +52,21 @@
       ]
   },
   {
+      "keys": ["super+k"],
+      "command": "latex_outliner_move_up",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
       "keys": ["super+down"],
+      "command": "latex_outliner_move_down",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["super+j"],
       "command": "latex_outliner_move_down",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
@@ -52,7 +80,21 @@
       ]
   },
   {
+      "keys": ["super+h"],
+      "command": "latex_outliner_outdent",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
       "keys": ["super+right"],
+      "command": "latex_outliner_indent",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["super+l"],
       "command": "latex_outliner_indent",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
@@ -68,7 +110,23 @@
       ]
   },
   {
+      "keys": ["c", "h"],
+      "command": "latex_outliner_create_new_item",
+      "args": {"heading": true},
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
       "keys": ["n", "t"],
+      "command": "latex_outliner_create_new_item",
+      "args": {"heading": false},
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  {
+      "keys": ["c", "t"],
       "command": "latex_outliner_create_new_item",
       "args": {"heading": false},
       "context": [

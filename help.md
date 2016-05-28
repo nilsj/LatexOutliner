@@ -1,10 +1,11 @@
 # Shortcuts
+"super" is ⌘ on mac.
 
 ## Move cursor
-- up/down : "up/down"
+- up/down : "up/down" or "k/j" with vintageous
 
 ## Modify shown elements
-- collapse/expand (or fold/unfold): "left/right"
+- collapse/expand (or fold/unfold): "left/right" or "h/l"
 - zoom in (on heading): "enter"
 - zoom out (everywhere): "backspace"
 
@@ -12,12 +13,12 @@
 - open text snippet: "enter"
 
 ## Move item
-- up/down (inside Heading): "super+up/down"
-- outdent/indent: "super+left/right"
+- up/down (inside Heading): "super+up/down" or "super+k/j"
+- outdent/indent: "super+left/right" or "super+h/l"
 
 # Modify item
-- create heading: "n, h"
-- create text snippet: "n, t"
+- create heading: "n, h" or "c, h"
+- create text snippet: "n, t" or "c, t"
 - rename item: "super+r"
 - delete item: "super+d"
 

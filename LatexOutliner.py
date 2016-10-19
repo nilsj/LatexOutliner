@@ -124,7 +124,8 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
                 section = Heading("Section "+str(i+1))
                 outline.appendChild(section)
                 for j in range(4):
-                    text = TextSnippet("Text Snippet "+str(j+1), project_root)
+                    text = TextSnippet("Text Snippet "+str(j+1), "",
+                                       project_root)
                     section.appendChild(text)
 
         self.window.run_command("latex_outliner")
@@ -273,13 +274,15 @@ class Heading():
         return heading
 
 
+# todo: alle aufrufe von TextSnippet checken und eine leere annotation reinschreiben
 class TextSnippet():
-    def __init__(self, caption, path, fresh=True):
+    def __init__(self, caption, annotation, path, fresh=True):
         """
         if fresh, path is the project_root,
         otherwise it is the path
         """
         self.caption = caption
+        self.annotation = annotation
         if fresh:
             self.path = self.get_fresh_file(path)
         else:
@@ -300,14 +303,22 @@ class TextSnippet():
         return join(NEW_SNIPPETS_DIRECTORY, fresh_name)
 
     def getJson(self):
+        if not hasattr(self, "annotation"):
+            self.annotation = ""
         return {'class': 'TextSnippet',
                 'caption': self.caption,
-                'path': self.path
+                'path': self.path,
+                'annotation': self.annotation,
                 }
 
     @staticmethod
     def fromJson(json):
-        text = TextSnippet(json['caption'], json['path'], fresh=False)
+        # todo: annotation check soll irgendwann raus, ist jetzt erstmal
+        # aus Kompatibilitätsgründen drin
+        if 'annotation' not in json:
+            json['annotation'] = ""
+        text = TextSnippet(json['caption'], json['annotation'],
+                           json['path'], fresh=False)
         return text
 
 
@@ -325,20 +336,39 @@ def getItemUnderCursor(view):
         return None
 
 
+def openTextSnippet(item, window):
+    project_root = dirname(window.project_file_name())
+    text_snippet_path = join(project_root, item.path)
+    new = window.open_file(text_snippet_path)
+    # todo: if view already open, only focus, do not bring to first position
+    window.set_view_index(new, 1, 0)
+
+
 class LatexOutlinerOpenTextSnippetOrZoomIn(TextCommand):
     def run(self, edit):
         view = self.view
         item = getItemUnderCursor(view)
-        project_root = dirname(view.window().project_file_name())
         if type(item) is TextSnippet:
-            text_snippet_path = join(project_root, item.path)
-            new = view.window().open_file(text_snippet_path)
-            # todo: if view already open, only focus
-            view.window().set_view_index(new, 1, 0)
+            openTextSnippet(item, view.window())
         elif type(item) is Heading:
+            project_root = dirname(view.window().project_file_name())
             _current_subtree[project_root] = item
             item.expanded = True
             view.run_command("populate_outline_view", {'cursorline': 0})
+
+
+class LatexOutlinerClickCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        syntax = view.settings().get('syntax')
+        if syntax == 'Packages/LatexOutliner/LatexOutliner.hidden-tmLanguage':
+            item = getItemUnderCursor(view)
+            if type(item) is TextSnippet:
+                openTextSnippet(item, view.window())
+            elif type(item) is Heading:
+                item.expanded = not item.expanded
+                line = item.linenumber
+                view.run_command("populate_outline_view", {'cursorline': line})
 
 
 class LatexOutlinerZoomOutCommand(TextCommand):
@@ -496,7 +526,7 @@ class LatexOutlinerCreateNewItemCommand(TextCommand):
         if newItemClass == "Heading":
             new_item = Heading(caption)
         elif newItemClass == "TextSnippet":
-            new_item = TextSnippet(caption, project_root)
+            new_item = TextSnippet(caption, "", project_root)
 
         if selectedItem is None:
             current_subtree = get_current_substree(project_root)
@@ -527,6 +557,31 @@ class LatexOutlinerRenameItemCommand(TextCommand):
 
     def renameItem(self, caption, selectedItem):
         selectedItem.caption = caption
+        line = selectedItem.linenumber
+        self.view.run_command("populate_outline_view", {'cursorline': line})
+
+
+class LatexOutlinerEditAnnotationCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        if type(item) is not TextSnippet:
+            return
+        # todo: der check ob das snippet ein Attribut annotation hat
+        # ist nur für den Übergang, und soll später raus
+        if not hasattr(item, "annotation"):
+            item.annotation = ""
+        on_done = partial(self.changeAnnotation,
+                          selectedItem=item)
+        view.window().show_input_panel(caption="Edit Frame Annotation",
+                                       initial_text=item.annotation,
+                                       on_done=on_done,
+                                       on_change=None,
+                                       on_cancel=None)
+
+    def changeAnnotation(self, annotation, selectedItem):
+        selectedItem.annotation = annotation
+        # note: it would be sufficient to just regenerate outline.json and .tex
         line = selectedItem.linenumber
         self.view.run_command("populate_outline_view", {'cursorline': line})
 
@@ -581,10 +636,13 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
         elif type(item) is TextSnippet:
             if beamer:
                 lines.append(indent*level+'\\begin{frame}')
+                if item.annotation:
+                    lines.append(indent*level+item.annotation)
                 lines.append(indent*level+'\\frametitle{'+item.caption+'}')
             lines.append(indent*level+'\input{"'+item.path+'"}')
             if beamer:
                 lines.append(indent*level+'\end{frame}')
+            lines.append('')
         return lines
 
     # todo: read base_level from settings

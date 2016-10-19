@@ -149,6 +149,14 @@
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
   },
+  // Edit Annotation for TextSnippet (beamer mode)
+  {
+      "keys": ["super+a"],
+      "command": "latex_outliner_edit_annotation",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
   // Show help
   {
       "keys": ["?"],

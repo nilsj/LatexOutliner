@@ -21,6 +21,7 @@
 - create text snippet: "n, t" or "c, t"
 - rename item: "super+r"
 - delete item: "super+d"
+- only for beamer: add/change annotations: "super+a"
 
 
 # Command Palette

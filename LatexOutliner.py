@@ -84,6 +84,7 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         if 'settings' not in project_data:
             project_data['settings'] = {}
         project_data['settings']['TEXroot'] = "main.tex"
+        project_data['settings']['line_numbers'] = false
 
         # write project settings
         self.window.set_project_data(project_data)

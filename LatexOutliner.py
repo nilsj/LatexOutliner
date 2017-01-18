@@ -196,8 +196,24 @@ class PopulateOutlineViewCommand(TextCommand):
         view.window().run_command("latex_outliner_update_outline_tex")
 
     def showOutlineStart(self, edit, currentSubtree):
+        # lineCount is used to match items to their linenumbers
         lineCount = count()
-        index = []
+        # As we add four header lines, we have four "emtpy" things
+        index = [None, None, None, None]
+        # show header
+        text = "\n"
+        line = next(lineCount)
+        self.view.insert(edit, self.view.text_point(line, 0), text)
+        text = currentSubtree.caption+"\n"
+        line = next(lineCount)
+        self.view.insert(edit, self.view.text_point(line, 0), text)
+        text = "⎯"*50+"\n"
+        line = next(lineCount)
+        self.view.insert(edit, self.view.text_point(line, 0), text)
+        text = "\n"
+        line = next(lineCount)
+        self.view.insert(edit, self.view.text_point(line, 0), text)
+
         for child in currentSubtree.children:
             index.extend(self.showOutline(edit, child, lineCount))
         return index

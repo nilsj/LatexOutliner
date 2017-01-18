@@ -1,0 +1,39 @@
+[
+	// {"caption": "Help", "id": "help" },
+	{
+		"caption": "LatexOutliner",
+		"id": "LatexOutliner",
+		"mnemonic": "l",
+		"children": [
+			{ "caption": "-" , "id": "open" },
+			{
+				"caption": "New Heading",
+			  	"command": "latex_outliner_create_new_item",
+      		  	"args": {"heading": true},
+      			"context": [
+        			{ "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      		]},
+			// { "command": "side_bar_folders_start_blank", "caption": "Append Folder…", "args": {"append": true}},
+			// { "caption": "-", "id": "edit" },
+			// { "command": "open_file", "args": { "file": "${packages}/User/Side Bar Folders.sublime-settings" }, "caption": "Edit Folders"},
+			// { "command": "side_bar_folders_sidebar_clear", "caption": "Clear Sidebar"},
+			// { "command": "side_bar_folders_remove_current", "caption": "Remove Current Folder"},
+			// { "caption": "-" , "id": "history" },
+			// {
+			// 	"caption": "Append Folder",
+			// 	"children": [
+			// 		{ "command": "side_bar_folders_swap", "caption": "Use \"Append\" Folder List as Default "},
+			// 		{ "caption": "-" },
+			// 		// Folder history goes here
+			// 		{ "command": "side_bar_folders_load", "args":{ "index": 0, "append": true }},
+			// 	]
+			// },
+			// // Folder history goes here
+			// { "caption": "-" , "id": "options-separator" },
+			// { "command": "side_bar_folders_load", "args":{ "index": 0 }},
+			// { "caption": "-" , "id": "options" },
+			// { "command": "side_bar_folders_audit_all", "caption": "Clear Missing Folders"},
+			{ "caption": "-" , "id": "end" }
+		]
+	}
+]

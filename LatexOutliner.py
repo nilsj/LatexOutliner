@@ -16,7 +16,7 @@ OUTLINE_TEX_DISCLAIMER = (
     "% This file is populated automatically with " +
     "\"LatexOutliner: Update outline.tex\".")
 OUTLINE_DIRECTORY = "outline"
-NEW_SNIPPETS_DIRECTORY = "new text snippets"
+NEW_SNIPPETS_DIRECTORY = "new_text_snippets"
 
 
 # the actual outlines (tree)
@@ -633,13 +633,20 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
         lines = [OUTLINE_TEX_DISCLAIMER, '']
         project_data = self.window.project_data()
         beamer = project_data['beamer']
-        lines.extend(self.traverseOutline(outline, beamer=beamer))
+        if 'headings_baselevel' in project_data:
+            baselevel = int(project_data['headings_baselevel'])
+        else:
+            # todo: else (und if) kann weg, wenn ich alle meine Projekte geupdated hab
+            self.window.show_quick_panel([["headings_baselevel muss in die Prjoject settings!", "Bitte dort eintragen"]], lambda x: True)
+            baselevel = 1
+
+        lines.extend(self.traverseOutline(outline, baselevel-1, beamer=beamer))
         outline_file = join(project_root, "outline.tex")
         with open(outline_file, 'w', encoding='utf-8') as f:
             for line in lines:
                 f.write(line+"\n")
 
-    def traverseOutline(self, item, level=-1, beamer=False):
+    def traverseOutline(self, item, level, beamer=False):
         indent = '  '
         lines = []
         if type(item) is Heading:
@@ -665,7 +672,8 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
 
     # todo: read base_level from settings
     def levelHeading(self, level, title):
-        headings = ['\section',
+        headings = ['\chapter',
+                    '\section',
                     '\subsection',
                     '\subsubsection',
                     '\paragraph',

@@ -637,7 +637,7 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
             baselevel = int(project_data['headings_baselevel'])
         else:
             # todo: else (und if) kann weg, wenn ich alle meine Projekte geupdated hab
-            self.window.show_quick_panel([["headings_baselevel muss in die Prjoject settings!", "Bitte dort eintragen"]], lambda x: True)
+            self.window.show_quick_panel([["headings_baselevel muss in die Project settings!", "Bitte dort eintragen"]], lambda x: True)
             baselevel = 1
 
         lines.extend(self.traverseOutline(outline, baselevel-1, beamer=beamer))
@@ -664,7 +664,7 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                 if item.annotation:
                     lines.append(indent*level+item.annotation)
                 lines.append(indent*level+'\\frametitle{'+item.caption+'}')
-            lines.append(indent*level+'\input{"'+item.path+'"}')
+            lines.append(indent*level+'\input{'+item.path[:-4]+'}')
             if beamer:
                 lines.append(indent*level+'\end{frame}')
             lines.append('')

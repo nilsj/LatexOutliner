@@ -149,6 +149,14 @@
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
   },
+  // Hide item
+  {
+      "keys": ["super+h"],
+      "command": "latex_outliner_hide_item",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
   // Edit Annotation for TextSnippet (beamer mode)
   {
       "keys": ["super+a"],

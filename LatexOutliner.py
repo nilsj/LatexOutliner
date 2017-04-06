@@ -223,11 +223,25 @@ class PopulateOutlineViewCommand(TextCommand):
     def showOutline(self, edit, item, lineCount, level=0, indent='  '):
         if type(item) is Heading:
             if item.expanded:
-                text = indent*level+"▾ "+item.caption+"\n"
+                symbol = "▾"
             else:
-                text = indent*level+"▸ "+item.caption+"\n"
+                symbol = "▸"
         elif type(item) is TextSnippet:
-            text = indent*level+"≡ "+item.caption+"\n"
+            symbol = "≡"
+
+        if item.hidden:
+            hidden = "H "
+        else:
+            hidden = ""
+
+        text = indent*level+"≡ "+item.caption+"\n"
+        text = "{indent}{symbol} {hidden}{caption}\n".format(
+            indent=indent*level,
+            symbol=symbol,
+            hidden=hidden,
+            caption=item.caption,
+            )
+
         line = next(lineCount)
         self.view.insert(edit, self.view.text_point(line, 0), text)
         item.linenumber = line
@@ -244,6 +258,7 @@ class Heading():
         self.parent = None
         self.children = []
         self.expanded = False
+        self.hidden = False
 
     def appendChild(self, child):
         self.children.append(child)
@@ -271,7 +286,8 @@ class Heading():
         json = {'class': 'Heading',
                 'caption': self.caption,
                 'children': [],
-                'expanded': self.expanded
+                'expanded': self.expanded,
+                'hidden': self.hidden,
                 }
         for child in self.children:
             json['children'].append(child.getJson())
@@ -281,6 +297,8 @@ class Heading():
     def fromJson(json):
         heading = Heading(json['caption'])
         heading.expanded = json['expanded']
+        if 'hidden' in json:
+            heading.hidden = json['hidden']
         for child in json['children']:
             if child['class'] == 'Heading':
                 childClass = Heading
@@ -301,6 +319,7 @@ class TextSnippet():
         """
         self.caption = caption
         self.annotation = annotation
+        self.hidden = False
         if fresh:
             self.path = self.get_fresh_file(path)
         else:
@@ -327,6 +346,7 @@ class TextSnippet():
                 'caption': self.caption,
                 'path': self.path,
                 'annotation': self.annotation,
+                'hidden': self.hidden
                 }
 
     @staticmethod
@@ -337,6 +357,8 @@ class TextSnippet():
             json['annotation'] = ""
         text = TextSnippet(json['caption'], json['annotation'],
                            json['path'], fresh=False)
+        if 'hidden' in json:
+            text.hidden = json['hidden']
         return text
 
 
@@ -625,6 +647,17 @@ class LatexOutlinerDeleteItemCommand(TextCommand):
                                   {'cursorline': line})
 
 
+class LatexOutlinerHideItemCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        item.hidden = not item.hidden
+        # idea: smart hiding of children
+        line = item.linenumber
+        self.view.run_command("populate_outline_view",
+                              {'cursorline': line})
+
+
 class LatexOutlinerUpdateOutlineTex(WindowCommand):
     def run(self):
         project_root = dirname(self.window.project_file_name())
@@ -649,6 +682,8 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
     def traverseOutline(self, item, level, beamer=False):
         indent = '  '
         lines = []
+        if item.hidden:
+            return lines
         if type(item) is Heading:
             # if item is not root element add section title
             if item.parent:
@@ -683,6 +718,7 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
 
 
 class LatexOutlinerExportToMindnode(WindowCommand):
+    # todo: share traversal with update outline tex
     def run(self):
         project_root = dirname(self.window.project_file_name())
         outline = get_outline(project_root)

@@ -230,15 +230,22 @@ class PopulateOutlineViewCommand(TextCommand):
             symbol = "≡"
 
         if item.hidden:
-            hidden = "H "
+            hidden = "% "
         else:
             hidden = ""
 
+        if hasattr(item, "use_as_title") and item.use_as_title:
+            use_as_title = "T "
+        else:
+            use_as_title = ""
+
+
         text = indent*level+"≡ "+item.caption+"\n"
-        text = "{indent}{symbol} {hidden}{caption}\n".format(
+        text = "{indent}{symbol} {hidden}{use_as_title}{caption}\n".format(
             indent=indent*level,
             symbol=symbol,
             hidden=hidden,
+            use_as_title=use_as_title,
             caption=item.caption,
             )
 
@@ -320,6 +327,7 @@ class TextSnippet():
         self.caption = caption
         self.annotation = annotation
         self.hidden = False
+        self.use_as_title = False
         if fresh:
             self.path = self.get_fresh_file(path)
         else:
@@ -346,7 +354,8 @@ class TextSnippet():
                 'caption': self.caption,
                 'path': self.path,
                 'annotation': self.annotation,
-                'hidden': self.hidden
+                'hidden': self.hidden,
+                'use_as_title': self.use_as_title,
                 }
 
     @staticmethod
@@ -359,6 +368,8 @@ class TextSnippet():
                            json['path'], fresh=False)
         if 'hidden' in json:
             text.hidden = json['hidden']
+        if 'use_as_title' in json:
+            text.use_as_title = json['use_as_title']
         return text
 
 
@@ -658,6 +669,18 @@ class LatexOutlinerHideItemCommand(TextCommand):
                               {'cursorline': line})
 
 
+class LatexOutlinerMakeTitleCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        if type(item) is not TextSnippet:
+            return
+        item.use_as_title = not item.use_as_title
+        line = item.linenumber
+        self.view.run_command("populate_outline_view",
+                              {'cursorline': line})
+
+
 class LatexOutlinerUpdateOutlineTex(WindowCommand):
     def run(self):
         project_root = dirname(self.window.project_file_name())
@@ -699,6 +722,9 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                 if item.annotation:
                     lines.append(indent*level+item.annotation)
                 lines.append(indent*level+'\\frametitle{'+item.caption+'}')
+            elif item.use_as_title:
+                lines.append(indent*level+self.levelHeading(
+                    level, item.caption))
             lines.append(indent*level+'\input{'+item.path[:-4]+'}')
             if beamer:
                 lines.append(indent*level+'\end{frame}')

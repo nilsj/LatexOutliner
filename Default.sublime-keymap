@@ -151,7 +151,7 @@
   },
   // Hide item
   {
-      "keys": ["super+shift+h"],
+      "keys": ["super+/"],
       "command": "latex_outliner_hide_item",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
@@ -159,8 +159,8 @@
   },
   // Use textsnippet title as header
   {
-      "keys": ["super+shift+d"],
-      "command": "latex_outliner_make_title",
+      "keys": ["super+shift+h"],
+      "command": "latex_outliner_make_header",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]

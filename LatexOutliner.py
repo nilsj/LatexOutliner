@@ -235,7 +235,7 @@ class PopulateOutlineViewCommand(TextCommand):
             hidden = ""
 
         if hasattr(item, "use_as_header") and item.use_as_header:
-            use_as_header = "T "
+            use_as_header = "H "
         else:
             use_as_header = ""
 
@@ -669,7 +669,7 @@ class LatexOutlinerHideItemCommand(TextCommand):
                               {'cursorline': line})
 
 
-class LatexOutlinerMakeTitleCommand(TextCommand):
+class LatexOutlinerMakeHeaderCommand(TextCommand):
     def run(self, edit):
         view = self.view
         item = getItemUnderCursor(view)

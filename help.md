@@ -21,7 +21,8 @@
 - create text snippet: "n, t" or "c, t"
 - rename item: "super+r"
 - delete item: "super+d"
-- hide item: "super+shift+h"
+- make title of text snippet also header: "super+shift+h"
+- hide item (and children): "super+/"
 - only for beamer: add/change annotations: "super+a"
 
 

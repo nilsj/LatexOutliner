@@ -9,11 +9,21 @@ The technical realization is inspired by the [FileBrowser][fb] plugin.
 [scr]: https://www.literatureandlatte.com/scrivener.php
 [fb]: https://github.com/aziz/SublimeFileBrowser
 
+## What does it?
+
+LatexOutliner shows a sidebar with an outline of your project.
+You can add text snippets and rearrange them.
+Under the hood, LatexOutliner keeps an outline.tex which you can include wherever you want, e.g. in a master.tex file.
+You can also group them under headers.
+Of course, you can nest headers, and move items around, all using vim style keybindings.
+
+See [the help file](help.md) for currently implemented functionality.
+
 ## Set up
 - Clone this repository to your packages directory
 - Save a new project in SublimeText
 - Command palette: "LatexOutliner: Set up project"
-- press `?` for help in the outline view
+- press `?` in the outline view for help
 - If the outline view is not visible later on, use "LatexOuteliner: Show outline on the left" in the command palette.
 
 ### Beamer
@@ -21,7 +31,7 @@ If you set the "beamer" property to true in the project settings, then each text
 
 ## Todos
 - move cursor with j,k (for non-vintageous users)
-- Enable build tex from outline view 
+- Enable build tex from outline view
 
 ### Later
 - export outline to filesystem

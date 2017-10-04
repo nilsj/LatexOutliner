@@ -239,7 +239,6 @@ class PopulateOutlineViewCommand(TextCommand):
         else:
             use_as_header = ""
 
-
         text = indent*level+"≡ "+item.caption+"\n"
         text = "{indent}{symbol} {hidden}{use_as_header}{caption}\n".format(
             indent=indent*level,

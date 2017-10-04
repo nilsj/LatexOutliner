@@ -1,29 +1,30 @@
 # Shortcuts
-"super" is ⌘ on mac.
+All shortcuts only work in the outline view.
+`super` is ⌘ on mac.
 
 ## Move cursor
-- up/down : "up/down" or "k/j" with vintageous
+- up/down : `up/down` or `k/j` with vintageous
 
 ## Modify shown elements
-- collapse/expand (or fold/unfold): "left/right" or "h/l"
-- zoom in (on heading): "enter"
-- zoom out (everywhere): "backspace"
+- collapse/expand (or fold/unfold): `left/right` or `h/l`
+- zoom in (on heading): `enter`
+- zoom out (everywhere): `backspace`
 
 ## View file
-- open text snippet: "enter"
+- open text snippet: `enter`
 
 ## Move item
-- up/down (inside Heading): "super+up/down" or "super+k/j"
-- outdent/indent: "super+left/right" or "super+h/l"
+- up/down (inside Heading): `super+up/down` or `super+k/j`
+- outdent/indent: `super+left/right` or `super+h/l`
 
 # Modify item
-- create heading: "n, h" or "c, h"
-- create text snippet: "n, t" or "c, t"
-- rename item: "super+r"
-- delete item: "super+d"
-- make title of text snippet also header: "super+shift+h"
-- hide item (and children): "super+/"
-- only for beamer: add/change annotations: "super+a"
+- create heading: `n, h` or `c, h`
+- create text snippet: `n, t` or `c, t`
+- rename item: `super+r`
+- delete item: `super+d`
+- toggle title of text snippet is also header: `super+shift+h`
+- toggle hide item (and children): `super+/`
+- only useful for beamer: add/change annotations: `super+a`
 
 
 # Command Palette

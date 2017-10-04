@@ -226,25 +226,27 @@ class PopulateOutlineViewCommand(TextCommand):
                 symbol = "▾"
             else:
                 symbol = "▸"
+                # todo: make headings by default use_as_header
+                # todo: show hollow triangle if heading is not used as header
+                # todo: selection of section, subsection etc needs to be adapted to do this
+                # symbol = "▸"▹▿
         elif type(item) is TextSnippet:
-            symbol = "≡"
+            if hasattr(item, "use_as_header") and item.use_as_header:
+                symbol = "⩸"
+            else:
+                symbol = "≡"
 
         if item.hidden:
             hidden = "% "
         else:
             hidden = ""
 
-        if hasattr(item, "use_as_header") and item.use_as_header:
-            use_as_header = "H "
-        else:
-            use_as_header = ""
+        #  symbols  "⩩ ⩧ ⩸"
 
-        text = indent*level+"≡ "+item.caption+"\n"
-        text = "{indent}{symbol} {hidden}{use_as_header}{caption}\n".format(
+        text = "{indent}{symbol}{hidden}{caption}\n".format(
             indent=indent*level,
             symbol=symbol,
             hidden=hidden,
-            use_as_header=use_as_header,
             caption=item.caption,
             )
 

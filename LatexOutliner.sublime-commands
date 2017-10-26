@@ -10,5 +10,9 @@
   {
     "caption": "LatexOutliner: Show help",
     "command": "latex_outliner_show_help"
+  },
+  {
+    "caption": "LatexOutliner: Highlight current snippet in the outline",
+    "command": "latex_outliner_highlight_snippet_in_outline"
   }
 ]

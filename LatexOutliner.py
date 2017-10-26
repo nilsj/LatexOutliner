@@ -3,7 +3,7 @@
 
 from sublime import message_dialog, packages_path, Region, ok_cancel_dialog
 from sublime_plugin import WindowCommand, TextCommand
-from os.path import join, dirname, isdir
+from os.path import join, dirname, isdir, relpath
 from os import mkdir, listdir
 from shutil import copyfile
 from itertools import count
@@ -220,6 +220,14 @@ class PopulateOutlineViewCommand(TextCommand):
             index.extend(self.showOutline(edit, child, lineCount))
         return index
 
+    # todo: remove_linenumber does not affect items outside of the
+    # current_subtree
+    def remove_linenumber(self, item):
+        item.linenumber = None
+        if type(item) is Heading:
+            for child in item.children:
+                self.remove_linenumber(child)
+
     def showOutline(self, edit, item, lineCount, level=0, indent='  '):
         if type(item) is Heading:
             if item.expanded:
@@ -257,6 +265,9 @@ class PopulateOutlineViewCommand(TextCommand):
         if type(item) is Heading and item.expanded:
             for child in item.children:
                 index.extend(self.showOutline(edit, child, lineCount, level+1))
+        if type(item) is Heading and not item.expanded:
+            for child in item.children:
+                self.remove_linenumber(child)
         return index
 
 
@@ -787,6 +798,86 @@ class LatexOutlinerExportToMindnode(WindowCommand):
         return lines
 
         # todo: read from opml file
+
+
+class LatexOutlinerHighlightSnippetInOutlineCommand(TextCommand):
+    """
+    If present, the line number is returned.
+    Otherwise a path to the item, containing the number of the child containing
+    it at each level in the index tree.
+    """
+    def find_snippet_in_item(self, item, path):
+        if type(item) == TextSnippet:
+            # print("item-path:", item.path)
+            if item.path == path:
+                if item.linenumber:
+                    return ('linenumber', item.linenumber)
+                else:
+                    # print("startet path")
+                    return ('path', [])
+            else:
+                return ('not_found', None)
+        elif type(item) == Heading:
+            for i, child in enumerate(item.children):
+                kind, result = self.find_snippet_in_item(child, path)
+                if kind == 'linenumber':
+                    return (kind, result)
+                if kind == 'path':
+                    # print("current path:", result)
+                    result.append(i)
+                    # print("new path:", result)
+                    return ('path', result)
+            return ('not_found', None)
+
+    def make_sure_path_is_visible(self, item, path):
+        if path == []:
+            return
+
+        if type(item) == Heading:
+            current_item = item.children[path[-1]]
+            rest_path = path[:-1]
+            current_item.expanded = True
+            self.make_sure_path_is_visible(current_item, rest_path)
+        else:
+            raise Exception("Not Heading. make_sure_path_is_visible")
+
+    def run(self, edit):
+        view = self.view
+        project_root = dirname(view.window().project_file_name())
+        outline = _outline[project_root]
+        # todo: does not take into account, that outline != current_subtree
+        # can be true
+        if outline != _current_subtree[project_root]:
+            message_dialog("Highlightning a snippet in the outline works \
+                currently only when the outline is not zoomed.")
+        filename = relpath(view.file_name(), project_root)
+        kind, result = self.find_snippet_in_item(outline, filename)
+
+        # idea: store outline view in global/plugin variable i can
+        # a) check, whether it is visible
+        # b) highlight the the correct line
+        # workaround: first view of first group
+        # todo: can crash without outline
+        outline_view = view.window().views_in_group(0)[0]
+
+        if kind == "linenumber":
+            outline_view.run_command(
+                "populate_outline_view", {'cursorline': result})
+        if kind == "path":
+            # go through outline and make sure, that the path is visible
+            self.make_sure_path_is_visible(outline, result)
+            # then run update outline
+            # idea: could be optimized: make_sure_path_is_visible could be
+            # integrated into show_outline
+            kind, result = self.find_snippet_in_item(outline, filename)
+            if kind == "linenumber":
+                outline_view.run_command(
+                    "populate_outline_view", {'cursorline': result})
+            else:
+                raise Exception("The snippet should be visible in the outline \
+                    by now")
+        else:
+            message_dialog("The current file is not included in the outline")
 
 
 class LatexOutlinerShowHelpCommand(WindowCommand):

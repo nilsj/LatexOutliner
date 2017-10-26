@@ -8,10 +8,6 @@
     "command": "set_up_latex_outliner_project"
   },
   {
-    "caption": "LatexOutliner: Update outline.tex",
-    "command": "latex_outliner_update_outline_tex"
-  },
-  {
     "caption": "LatexOutliner: Show help",
     "command": "latex_outliner_show_help"
   }

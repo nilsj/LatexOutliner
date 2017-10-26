@@ -195,7 +195,7 @@ class PopulateOutlineViewCommand(TextCommand):
         # update outline.tex
         view.window().run_command("latex_outliner_update_outline_tex")
         # update outline.opml
-        view.window().run_command("latex_outliner_export_to_mindnode")
+        # view.window().run_command("latex_outliner_export_to_mindnode")
 
     def showOutlineStart(self, edit, currentSubtree):
         # lineCount is used to match items to their linenumbers

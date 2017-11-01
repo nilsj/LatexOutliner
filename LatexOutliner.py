@@ -863,12 +863,13 @@ class LatexOutlinerHighlightSnippetInOutlineCommand(TextCommand):
         if kind == "linenumber":
             outline_view.run_command(
                 "populate_outline_view", {'cursorline': result})
-        if kind == "path":
+        elif kind == "path":
             # go through outline and make sure, that the path is visible
             self.make_sure_path_is_visible(outline, result)
             # then run update outline
             # idea: could be optimized: make_sure_path_is_visible could be
             # integrated into show_outline
+            outline_view.run_command("populate_outline_view")
             kind, result = self.find_snippet_in_item(outline, filename)
             if kind == "linenumber":
                 outline_view.run_command(

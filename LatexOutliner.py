@@ -80,11 +80,12 @@ class SetUpLatexOutlinerProjectCommand(WindowCommand):
         # idea: ask if beamer should be set to true
         # todo: check how to write true in settings
         project_data['beamer'] = False
+        project_data['headings_baselevel'] = 1
         # set TEXroot
         if 'settings' not in project_data:
             project_data['settings'] = {}
         project_data['settings']['TEXroot'] = "main.tex"
-        project_data['settings']['line_numbers'] = false
+        project_data['settings']['line_numbers'] = False
 
         # write project settings
         self.window.set_project_data(project_data)

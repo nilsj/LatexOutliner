@@ -698,6 +698,8 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
     def run(self):
         project_root = dirname(self.window.project_file_name())
         outline = get_outline(project_root)
+        # idea: only tex the current subtree. needs accurate baselevel
+        # outline = get_current_substree(project_root)
 
         lines = [OUTLINE_TEX_DISCLAIMER, '']
         project_data = self.window.project_data()

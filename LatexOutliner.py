@@ -250,12 +250,18 @@ class PopulateOutlineViewCommand(TextCommand):
         else:
             hidden = ""
 
+        if item.starred:
+            starred = "* "
+        else:
+            starred = ""
+
         #  symbols  "⩩ ⩧ ⩸"
 
-        text = "{indent}{symbol}{hidden}{caption}\n".format(
+        text = "{indent}{symbol}{hidden}{starred}{caption}\n".format(
             indent=indent*level,
             symbol=symbol,
             hidden=hidden,
+            starred=starred,
             caption=item.caption,
             )
 
@@ -279,6 +285,7 @@ class Heading():
         self.children = []
         self.expanded = False
         self.hidden = False
+        self.starred = False
 
     def appendChild(self, child):
         self.children.append(child)
@@ -302,12 +309,14 @@ class Heading():
                     onlyVisible)
         return number_of_children
 
+    # idea: extract common fields with textsnippet to a base class
     def getJson(self):
         json = {'class': 'Heading',
                 'caption': self.caption,
                 'children': [],
                 'expanded': self.expanded,
                 'hidden': self.hidden,
+                'starred': self.starred,
                 }
         for child in self.children:
             json['children'].append(child.getJson())
@@ -319,6 +328,8 @@ class Heading():
         heading.expanded = json['expanded']
         if 'hidden' in json:
             heading.hidden = json['hidden']
+        if 'starred' in json:
+            heading.starred = json['starred']
         for child in json['children']:
             if child['class'] == 'Heading':
                 childClass = Heading
@@ -340,6 +351,7 @@ class TextSnippet():
         self.caption = caption
         self.annotation = annotation
         self.hidden = False
+        self.starred = False
         self.use_as_header = False
         if fresh:
             self.path = self.get_fresh_file(path)
@@ -368,6 +380,7 @@ class TextSnippet():
                 'path': self.path,
                 'annotation': self.annotation,
                 'hidden': self.hidden,
+                'starred': self.starred,
                 'use_as_header': self.use_as_header,
                 }
 
@@ -381,6 +394,8 @@ class TextSnippet():
                            json['path'], fresh=False)
         if 'hidden' in json:
             text.hidden = json['hidden']
+        if 'starred' in json:
+            text.starred = json['starred']
         if 'use_as_header' in json:
             text.use_as_header = json['use_as_header']
         return text
@@ -682,6 +697,16 @@ class LatexOutlinerHideItemCommand(TextCommand):
                               {'cursorline': line})
 
 
+class LatexOutlinerStarItemCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        item.starred = not item.starred
+        line = item.linenumber
+        self.view.run_command("populate_outline_view",
+                              {'cursorline': line})
+
+
 class LatexOutlinerMakeHeaderCommand(TextCommand):
     def run(self, edit):
         view = self.view
@@ -727,7 +752,7 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
             if item.parent:
                 lines.append('')
                 lines.append(indent*level+self.levelHeading(
-                    level, item.caption))
+                    level, item.caption, item.starred))
             for child in item.children:
                 lines.extend(self.traverseOutline(child, level+1, beamer))
             lines.append('')
@@ -739,7 +764,7 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                 lines.append(indent*level+'\\frametitle{'+item.caption+'}')
             elif item.use_as_header:
                 lines.append(indent*level+self.levelHeading(
-                    level, item.caption))
+                    level, item.caption, item.starred))
             lines.append(indent*level+'\input{'+item.path[:-4]+'}')
             if beamer:
                 lines.append(indent*level+'\end{frame}')
@@ -747,7 +772,8 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
         return lines
 
     # todo: read base_level from settings
-    def levelHeading(self, level, title):
+    # idea: when textsnippets and headings have a base class, this could moved there
+    def levelHeading(self, level, title, starred=False):
         headings = ['\chapter',
                     '\section',
                     '\subsection',
@@ -755,7 +781,11 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
                     '\paragraph',
                     '\subparagraph',
                     ]
-        return headings[level]+'{'+title+'}'
+        if starred:
+            star = "*"
+        else:
+            star = ""
+        return headings[level]+star+'{'+title+'}'
 
 
 class LatexOutlinerExportToMindnode(WindowCommand):

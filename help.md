@@ -23,6 +23,7 @@ All shortcuts only work in the outline view.
 - rename item: `super+r`
 - delete item: `super+d`
 - toggle title of text snippet is also header: `super+shift+h`
+- toggle unnumbered header (star version): `super+shift+8`
 - toggle hide item (and children): `super+/`
 - only useful for beamer: add/change annotations: `super+a`
 

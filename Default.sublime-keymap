@@ -157,6 +157,14 @@
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
   },
+  // Toggle framenumber for beamer
+  {
+      "keys": ["super+shift+,"],
+      "command": "latex_outliner_noframenumber",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
   // Use textsnippet title as header
   {
       "keys": ["super+shift+h"],

@@ -238,11 +238,19 @@ class PopulateOutlineViewCommand(TextCommand):
                 # todo: show hollow triangle if heading is not used as header
                 # todo: selection of section, subsection etc needs to be adapted to do this
                 # symbol = "▸"▹▿
+
+            noframenumber = ""
+
         elif type(item) is TextSnippet:
             if hasattr(item, "use_as_header") and item.use_as_header:
                 symbol = "⩸"
             else:
                 symbol = "≡"
+
+            if item.noframenumber:
+                noframenumber = "# "
+            else:
+                noframenumber = ""
 
         if item.hidden:
             hidden = "% "
@@ -251,10 +259,11 @@ class PopulateOutlineViewCommand(TextCommand):
 
         #  symbols  "⩩ ⩧ ⩸"
 
-        text = "{indent}{symbol}{hidden}{caption}\n".format(
+        text = "{indent}{symbol}{hidden}{noframenumber}{caption}\n".format(
             indent=indent*level,
             symbol=symbol,
             hidden=hidden,
+            noframenumber=noframenumber,
             caption=item.caption,
             )
 
@@ -339,6 +348,7 @@ class TextSnippet():
         self.caption = caption
         self.annotation = annotation
         self.hidden = False
+        self.noframenumber = False
         self.use_as_header = False
         if fresh:
             self.path = self.get_fresh_file(path)
@@ -367,6 +377,7 @@ class TextSnippet():
                 'path': self.path,
                 'annotation': self.annotation,
                 'hidden': self.hidden,
+                'noframenumber': self.noframenumber,
                 'use_as_header': self.use_as_header,
                 }
 
@@ -380,6 +391,8 @@ class TextSnippet():
                            json['path'], fresh=False)
         if 'hidden' in json:
             text.hidden = json['hidden']
+        if 'noframenumber' in json:
+            text.noframenumber = json['noframenumber']
         if 'use_as_header' in json:
             text.use_as_header = json['use_as_header']
         return text
@@ -681,6 +694,16 @@ class LatexOutlinerHideItemCommand(TextCommand):
                               {'cursorline': line})
 
 
+class LatexOutlinerNoframenumberCommand(TextCommand):
+    def run(self, edit):
+        view = self.view
+        item = getItemUnderCursor(view)
+        item.noframenumber = not item.noframenumber
+        line = item.linenumber
+        self.view.run_command("populate_outline_view",
+                              {'cursorline': line})
+
+
 class LatexOutlinerMakeHeaderCommand(TextCommand):
     def run(self, edit):
         view = self.view
@@ -730,6 +753,10 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
             lines.append('')
         elif type(item) is TextSnippet:
             if beamer:
+                if item.noframenumber:
+                    # idea: indent the rest more when using noframenumber
+                    lines.append(indent*level+'\\begingroup')
+                    lines.append(indent*level+'\\renewcommand{\insertframenumber}{}')
                 lines.append(indent*level+'\\begin{frame}')
                 if item.annotation:
                     lines.append(indent*level+item.annotation)
@@ -740,6 +767,11 @@ class LatexOutlinerUpdateOutlineTex(WindowCommand):
             lines.append(indent*level+'\input{'+item.path[:-4]+'}')
             if beamer:
                 lines.append(indent*level+'\end{frame}')
+                if item.noframenumber:
+                    lines.append(indent*level+'\\addtocounter{framenumber}{-1}')
+                    lines.append(indent*level+'\endgroup')
+
+
             lines.append('')
         return lines
 

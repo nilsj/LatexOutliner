@@ -157,10 +157,18 @@
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
   },
-  // Hide item
+  // Star heading (no number)
   {
       "keys": ["super+shift+8"],
       "command": "latex_outliner_star_item",
+      "context": [
+        { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
+      ]
+  },
+  // Toggle framenumber for beamer
+  {
+      "keys": ["super+shift+,"],
+      "command": "latex_outliner_noframenumber",
       "context": [
         { "key": "selector", "operator": "equal", "operand": "text.LatexOutliner" }
       ]
